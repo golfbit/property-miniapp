@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ระบบบริหารทรัพย์และขายฝาก</title>
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14332B;--ink2:#2C5A4E;--gold:#C39A2B;--gold-soft:#F5EBD0;--paper:#F2F4F1;--card:#fff;--line:#D9DFDB;--text:#1B2422;--muted:#66736F;--red:#B4372B;--red-soft:#F8E4E1;--amber:#C97F0C;--amber-soft:#FBEED6;--green:#2F8F5B;--green-soft:#DFF1E6;--r:10px;--side:230px}
+*{box-sizing:border-box;margin:0;padding:0}[hidden]{display:none!important}
+body{font-family:'Sarabun',system-ui,sans-serif;background:var(--paper);color:var(--text);font-size:15px;line-height:1.5;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer;border:0;background:none}a{color:inherit}
+#app{display:none;grid-template-columns:var(--side) 1fr;min-height:100vh}#app.on{display:grid}
+.side{background:var(--ink);color:#E9EFEC;padding:22px 16px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{padding:4px 10px 14px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:10px}.brand strong{display:block;font-size:17px;font-weight:700}.brand span{font-size:12.5px;color:#A8BDB5}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:#C9D6D0;text-align:left;width:100%;font-weight:500}.nav:hover{background:rgba(255,255,255,.07);color:#fff}.nav.on{background:var(--gold);color:var(--ink);font-weight:600}
+.nav .badge{margin-left:auto;background:var(--red);color:#fff;font-size:11.5px;padding:1px 7px;border-radius:99px;font-weight:600}.nav.on .badge{background:var(--ink);color:#fff}
+.side .foot{margin-top:auto;font-size:12.5px;color:#8AA39A;padding:8px 10px 0;border-top:1px solid rgba(255,255,255,.12)}.side .foot b{color:#fff;display:block}
+main{min-width:0;padding:22px 26px 90px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}.top h1{font-size:23px;font-weight:700;color:var(--ink)}.top p{color:var(--muted);font-size:13.5px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-weight:600;font-size:14px;border:1px solid var(--line);background:#fff;color:var(--ink);text-decoration:none}.btn:hover{border-color:var(--ink2)}.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}.btn.primary:hover{background:var(--ink2)}.btn.danger{color:var(--red);border-color:#E7C7C3}.btn.sm{padding:5px 10px;font-size:13px}.btn:disabled{opacity:.5;cursor:wait}
+.btn:focus-visible,.nav:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.toolbar input,.toolbar select{padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;min-width:150px}.toolbar input{flex:1;min-width:180px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r)}.card h3{font-size:15px;font-weight:700;color:var(--ink);padding:14px 16px 0}.card .sub{font-size:13px;color:var(--muted);padding:0 16px}
+.due-strip{background:var(--ink);color:#fff;border-radius:var(--r);padding:18px 20px;margin-bottom:16px}.due-strip h2{font-size:15px;font-weight:600;color:#C9D6D0;margin-bottom:12px}
+.due-list{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}.due-item{flex:none;width:210px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:12px 14px;cursor:pointer}.due-item:hover{background:rgba(255,255,255,.11)}
+.due-item .d{font-size:30px;font-weight:700;line-height:1;color:var(--gold)}.due-item .d small{font-size:13px;font-weight:500;color:#C9D6D0;margin-left:4px}.due-item.hot .d{color:#FF8A78}.due-item .k{font-size:12px;color:#A8BDB5}
+.due-item .n{font-weight:600;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.due-item .m{font-size:12.5px;color:#A8BDB5}.due-empty{color:#A8BDB5;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.stat{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}.stat .l{font-size:13px;color:var(--muted)}.stat .v{font-size:22px;font-weight:700;color:var(--ink);margin-top:2px}.stat .v small{font-size:13px;font-weight:500;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.rows{display:flex;flex-direction:column}.row{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:12px 16px;border-top:1px solid var(--line);cursor:pointer;align-items:center}.row:first-child{border-top:0}.row:hover{background:#F7F9F7}
+.row .t{font-weight:600;color:var(--ink)}.row .s{font-size:13px;color:var(--muted)}.row .right{text-align:right;font-weight:600;white-space:nowrap}.row .right .s{font-weight:400}
+.empty{padding:26px 16px;text-align:center;color:var(--muted);font-size:14px}.empty b{display:block;color:var(--text);font-weight:600;margin-bottom:4px}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;background:#EEF1EF;color:var(--muted);vertical-align:middle}.tag.green{background:var(--green-soft);color:var(--green)}.tag.gold{background:var(--gold-soft);color:#8A6A12}.tag.red{background:var(--red-soft);color:var(--red)}.tag.amber{background:var(--amber-soft);color:var(--amber)}.tag.ink{background:#E3ECE8;color:var(--ink2)}
+table{width:100%;border-collapse:collapse}th,td{padding:10px 14px;text-align:left;border-top:1px solid var(--line);font-size:14px}th{border-top:0;font-weight:600;color:var(--muted);font-size:13px}td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}tr.click{cursor:pointer}tr.click:hover td{background:#F7F9F7}
+.income{color:var(--green);font-weight:600}.expense{color:var(--red);font-weight:600}
+.pcard{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer}.pcard img,.pcard .noimg{width:100%;aspect-ratio:4/3;object-fit:cover;background:#E3ECE8;display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:13px}.pcard .b{padding:10px 12px}.pcard .b .t{font-weight:600;color:var(--ink)}.pcard .b .s{font-size:13px;color:var(--muted)}.pcard .b .p{font-weight:700;color:var(--ink);margin-top:4px}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.thumbs a{display:block;width:84px;height:84px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#EEF1EF;font-size:11px;color:var(--muted);text-align:center;padding:4px;word-break:break-all;position:relative}.thumbs img{width:100%;height:100%;object-fit:cover}.thumbs button{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);color:#fff;border-radius:4px;font-size:11px;padding:0 5px}
+.score{font-weight:700;color:var(--ink);background:var(--gold-soft);border-radius:6px;padding:2px 8px}
+.overlay{position:fixed;inset:0;background:rgba(20,51,43,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}.overlay.open{display:flex}
+.modal{background:#fff;width:100%;max-width:660px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:20px 20px 28px}.modal h2{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}.modal h2 button{font-size:22px;color:var(--muted);line-height:1;padding:4px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.f{display:flex;flex-direction:column;gap:4px}.f.full{grid-column:1/-1}.f label{font-size:13px;color:var(--muted);font-weight:500}.f input,.f select,.f textarea{padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}.f textarea{min-height:70px;resize:vertical}
+.calc{grid-column:1/-1;background:var(--gold-soft);border-radius:8px;padding:10px 14px;font-size:14px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}.calc b{color:#8A6A12}
+.mact{display:flex;justify-content:space-between;gap:8px;margin-top:16px;grid-column:1/-1}.linked{grid-column:1/-1;border-top:1px solid var(--line);padding-top:12px;margin-top:4px}.linked h4{font-size:14px;font-weight:600;color:var(--ink);margin:6px 0}.linked .li{font-size:13.5px;padding:5px 0;display:flex;justify-content:space-between;gap:8px;border-top:1px dashed var(--line);align-items:center}
+.split{display:grid;grid-template-columns:1fr 1fr 80px 32px;gap:6px;margin-bottom:6px}.split input,.split select{padding:7px 9px;border:1px solid var(--line);border-radius:8px}
+#toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:90vw;text-align:center}#toast.show{opacity:1}
+#busy{position:fixed;top:0;left:0;right:0;height:3px;background:var(--gold);display:none;z-index:70}#busy.on{display:block;animation:b 1s infinite alternate}@keyframes b{from{opacity:.3}to{opacity:1}}
+/* auth */
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--ink)}
+.authbox{background:#fff;border-radius:16px;padding:28px 26px;width:100%;max-width:400px}.authbox h1{font-size:20px;color:var(--ink);font-weight:700}.authbox p{color:var(--muted);font-size:13.5px;margin-bottom:16px}.authbox .f{margin-bottom:10px}.authbox .btn{width:100%;justify-content:center;margin-top:6px}.authbox .sw{text-align:center;margin-top:14px;font-size:14px}.authbox .sw button{color:var(--ink2);font-weight:600;text-decoration:underline}
+.btn.line{background:#06C755;border-color:#06C755;color:#fff;font-size:15px;padding:12px 14px}.btn.line:hover{background:#05b34c}.btn.line svg{width:22px;height:22px;fill:#fff}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px;margin:14px 0 10px}.or:before,.or:after{content:'';flex:1;height:1px;background:var(--line)}
+.avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#2C5A4E;flex:none}.who{display:flex;gap:10px;align-items:center}
+.tabbar{display:none}
+@media (max-width:860px){.row{padding:14px 14px;min-height:56px}.btn.sm{padding:8px 12px}.f input,.f select,.f textarea{padding:11px 12px;font-size:16px}.toolbar input,.toolbar select{padding:11px 12px;font-size:16px}#app.on{grid-template-columns:1fr}.side{display:none}main{padding:16px 14px 88px}.stats{grid-template-columns:1fr 1fr}.grid2,.grid3{grid-template-columns:1fr}.form{grid-template-columns:1fr}.top h1{font-size:20px}.split{grid-template-columns:1fr 1fr 70px 30px}
+.tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);z-index:40;padding:6px 4px calc(6px + env(safe-area-inset-bottom));overflow-x:auto}.tabbar button{flex:1;min-width:64px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);padding:4px 0;position:relative}.tabbar button.on{color:var(--ink);font-weight:600}.tabbar .badge{position:absolute;top:0;right:14%;background:var(--red);color:#fff;font-size:10px;padding:0 5px;border-radius:99px}.tabbar .ic{font-size:18px;line-height:1}}
+@media (max-width:600px){
+  main{padding:12px 10px calc(94px + env(safe-area-inset-bottom))}
+  .top{align-items:flex-start;gap:10px;margin-bottom:12px}.top .actions{width:100%;display:flex;gap:8px;flex-wrap:wrap}.top .actions .btn{flex:1;min-height:44px}
+  .stats{grid-template-columns:1fr 1fr;gap:8px}.stat{padding:14px 12px}.stat b{font-size:22px}
+  .toolbar{display:grid;grid-template-columns:1fr;gap:8px}.toolbar input,.toolbar select,.toolbar .btn{width:100%;min-height:44px}
+  .row{align-items:flex-start;gap:8px}.row .right{max-width:42%;white-space:normal}
+  .pcards{grid-template-columns:1fr}.pcard .b{padding:14px}.pcard img,.pcard .noimg{aspect-ratio:16/10}
+  .modal{max-height:94dvh;padding:16px 14px calc(24px + env(safe-area-inset-bottom))}.modal h2{position:sticky;top:-16px;background:#fff;z-index:2;padding:12px 0;margin-top:-12px}
+  .form{gap:10px}.mact{position:sticky;bottom:0;background:#fff;padding:10px 0 calc(4px + env(safe-area-inset-bottom));z-index:2}.mact .btn{min-height:44px;flex:1}
+  .split{grid-template-columns:1fr 70px 34px}.split .sp_name{grid-column:1/-1}
+  .tabbar{scrollbar-width:none}.tabbar::-webkit-scrollbar{display:none}.tabbar button{min-width:70px;min-height:52px}
+}
+@media (min-width:861px){.modal{border-radius:16px}.overlay{align-items:center}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* แผนที่ */
+.mapwrap{position:relative;z-index:0;height:calc(100vh - 230px);min-height:380px;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:#E8EDE9}
+@media (max-width:860px){.mapwrap{height:calc(100vh - 260px)}}
+.maplegend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;font-size:13px;color:var(--muted)}.maplegend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.maphint{font-size:12.5px;color:var(--muted);margin-top:8px}
+.pm-pin{background:none;border:0}.pm-pin span{display:block;width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.mappop img{display:block;width:100%;height:110px;object-fit:cover;border-radius:8px;margin-bottom:6px}.mappop-hl{font-size:12.5px;color:var(--text);margin-top:4px;line-height:1.45}.pubmap{height:220px;border-radius:10px;margin:10px 0;overflow:hidden;border:1px solid var(--line);z-index:0}
+.mappop{min-width:210px;max-width:250px;font-family:'Sarabun',system-ui,sans-serif}.mappop b{display:block;color:var(--ink);font-size:14.5px;margin-bottom:3px}.mappop-price{font-weight:700;color:var(--ink)}.mappop-meta{font-size:12.5px;color:var(--muted)}.mappop-btn{display:flex;gap:6px;margin-top:8px}.mappop-btn .btn{flex:1;justify-content:center}
+.pickrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}#pk_hint{font-size:12.5px;color:var(--muted)}
+.pinpick{position:fixed;inset:0;z-index:3000;background:#fff;display:flex;flex-direction:column}
+.pp-top{display:flex;gap:6px;padding:10px;border-bottom:1px solid var(--line);background:#fff}.pp-top input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:16px}
+.pp-mapwrap{flex:1;position:relative;overflow:hidden}#pp_map{position:absolute;inset:0;z-index:0;background:#E8EDE9}
+.pp-cross{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-40px 0 0 -17px;z-index:1000;pointer-events:none}.pp-cross span{display:block;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#C39A2B;border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.pp-dot{position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#14332B;border:2px solid #fff;z-index:1001;pointer-events:none}
+.pp-msg{position:absolute;left:10px;right:10px;top:10px;z-index:1002;background:rgba(20,51,43,.9);color:#fff;font-size:13px;padding:8px 12px;border-radius:8px;text-align:center}
+.pp-bot{padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#fff}.pp-ll{font-size:13px;color:var(--muted);margin-bottom:8px;text-align:center}.pp-bot .btn{width:100%;justify-content:center;padding:13px;font-size:16px}.pp-tip{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
+/* หน้าทรัพย์สาธารณะ (ลิงก์ที่ส่งให้ลูกค้า) */
+.pubcard{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:-6px -4px 16px;background:#fff}
+.pubhero{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#EEF1EF}
+.pubstrip{display:flex;gap:6px;overflow-x:auto;padding:8px 8px 0}.pubstrip img{width:66px;height:50px;object-fit:cover;border-radius:6px;flex:none;cursor:pointer;border:2px solid transparent}.pubstrip img.on{border-color:var(--gold)}
+.pubbody{padding:12px 14px 14px}.pubname{font-weight:700;color:var(--ink);font-size:16.5px;line-height:1.35}.pubprice{font-weight:700;color:var(--ink);font-size:20px;margin:4px 0 2px}.pubmeta{font-size:13px;color:var(--muted)}
+.pubhl{white-space:pre-wrap;font-size:14px;margin:10px 0 4px;color:var(--text);line-height:1.6}
+</style>
+</head>
+<body>
+<div id="busy"></div>
+<div id="auth"><div class="authbox" id="authbox"></div></div>
+<div id="app">
+  <aside class="side"><div class="brand"><strong>ทรัพย์ &amp; ขายฝาก</strong><span>ระบบบริหารงานทีม</span></div><div id="sidenav"></div><div class="foot who"><img class="avatar" id="whopic" alt="" style="display:none"><div><b id="whoami"></b><span id="whorole"></span></div></div></aside>
+  <main><header class="top"><div><h1 id="title"></h1><p id="subtitle"></p></div><div class="actions" id="actions"></div></header><section id="view"></section></main>
+  <nav class="tabbar" id="tabbar"></nav>
+</div>
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div id="toast"></div>
+<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"","version":"2026.10.08a"}</script>
+<script>
+// แสดง error บนหน้าจอ (แทนที่กล่องล็อกอินว่างเปล่า) เพื่อให้แก้ได้ง่าย
+window.onerror=function(msg,src,line,col,err){ try{ var b=document.getElementById('authbox'); if(b&&!b.innerHTML.trim()) b.innerHTML='<h1 style="color:#B4372B;font-size:16px">แอปโหลดไม่สำเร็จ</h1><p style="font-size:13px;word-break:break-word">'+String(msg)+' (บรรทัด '+line+')</p><p style="font-size:12px;color:#66736F">ถ่ายภาพหน้านี้ส่งให้ผู้พัฒนา หรือกด F12 → Console</p>'; }catch(e){} };
+// ข้อมูลเริ่มต้นจาก doGet: appUrl, lineChannelId, token/pending (หลัง LINE callback), authMsg, state
+const BOOT=(function(){ try{ return JSON.parse(document.getElementById('bootjson').textContent||'{}')||{}; }catch(e){ return {}; } })();
+if(!BOOT.appUrl) BOOT.appUrl=location.href.split('?')[0];
+// เปิดจากปุ่มบน rich menu (?source=richmenu): ถ้าเครื่องนี้มี token อยู่แล้วจะเข้าแอปทันที
+// ถ้าไม่มี ต้องให้ผู้ใช้แตะปุ่ม LINE เอง "ห้ามพาไปหน้า LINE Login อัตโนมัติ" เพราะหน้าเว็บนี้อยู่ในกรอบ (iframe) ของ Apps Script:
+//   - location.replace() จะเปิดหน้า LINE ในกรอบ ซึ่ง LINE ไม่ยอมให้ถูกฝัง → หน้าขาวทั้งหน้า
+//   - การพาทั้งหน้าไปที่อื่น Apps Script ยอมเฉพาะเมื่อผู้ใช้แตะเอง (allow-top-navigation-by-user-activation)
+const FROM_RICH_MENU=BOOT.source==='richmenu';
+/* ---------- labels ---------- */
+const PTYPE={land:'ที่ดิน',house:'บ้าน',condo:'คอนโด',commercial:'อาคารพาณิชย์',other:'อื่นๆ'};
+const PSTATUS={pending:['รอตรวจ/รอเอกสาร',''],available:['พร้อมขาย','green'],reserved:['ติดจอง','amber'],consign:['อยู่ในสัญญาขายฝาก','gold'],sold:['ขายแล้ว','ink'],withdrawn:['ถอนประกาศ','']};
+const PDEAL={sale:'ฝากขาย',consign:'ขายฝาก',rent:'ให้เช่า',invest:'ทรัพย์ลงทุนของเรา'};
+const LKIND={exclusive:'แต่งตั้งนายหน้าแต่เพียงผู้เดียว (Exclusive)',open:'เปิดทั่วไป (Open)',verbal:'ตกลงด้วยวาจา'};
+const LSTATUS={active:['ใช้งาน','green'],expired:['หมดอายุ','red'],closed:['ปิดดีลแล้ว','ink'],cancelled:['ยกเลิก','']};
+const CSTATUS={active:['อยู่ในสัญญา','green'],extended:['ต่อสัญญาแล้ว','gold'],redeemed:['ไถ่ถอนแล้ว','ink'],forfeited:['หลุดขายฝาก','red']};
+const VRESULT={pending:['รอชม','amber'],interested:['สนใจ','green'],thinking:['ขอคิดดู','gold'],not:['ไม่สนใจ',''],offer:['ยื่นข้อเสนอ','green']};
+const DSTATUS={negotiating:['เจรจา','amber'],reserved:['วางมัดจำ','gold'],closed:['โอนแล้ว','green'],cancelled:['ยกเลิก','red']};
+const TTYPE={viewing:'พาชมทรัพย์',transfer:'นัดโอน/ทำสัญญา',doc:'เตรียมเอกสาร',call:'โทรติดตาม',survey:'ลงพื้นที่/รังวัด',other:'อื่นๆ'};
+const TRCAT={commission:'ค่าคอมมิชชั่น',interest:'ผลตอบแทนขายฝาก',redemption:'รับเงินไถ่ถอน',invest:'เงินลงทุนขายฝาก',fee:'ค่าธรรมเนียม/ภาษี',marketing:'การตลาด/โฆษณา',travel:'เดินทาง',other:'อื่นๆ'};
+const ROLE={admin:'ผู้ดูแลระบบ',staff:'ทีมงาน',broker:'นายหน้าภายนอก',owner:'เจ้าของทรัพย์',buyer:'ผู้ซื้อ/นักลงทุน'};
+const USTATUS={pending:['รออนุมัติ','amber'],active:['ใช้งาน','green'],blocked:['ระงับ','red'],contact:['ผู้ติดต่อ (ไม่ล็อกอิน)','']};
+const NAV={
+  admin:['dash','prop','map','listing','cont','match','viewing','deal','cust','task','fin','users','set'],
+  staff:['dash','prop','map','listing','cont','match','viewing','deal','cust','task','fin','users','set'],
+  broker:['dash','prop','map','listing','cont','match','viewing','deal','cust','task','fin','set'],
+  owner:['odash','prop','map','listing','cont','viewing','set'],
+  buyer:['market','map','need','viewing','set']};
+const NAVL={map:'แผนที่',dash:'ภาพรวม',odash:'ทรัพย์ของฉัน',market:'ทรัพย์เปิดขาย',prop:'ทรัพย์',listing:'สัญญานายหน้า',cont:'ขายฝาก',match:'จับคู่ผู้ซื้อ',need:'ความต้องการ',viewing:'นัดชม',deal:'ดีล/ค่าคอม',cust:'ลูกค้า',task:'งาน',fin:'การเงิน',users:'ผู้ใช้',set:'ตั้งค่า'};
+const NAVI={map:'⌖',dash:'▦',odash:'▦',market:'⌂',prop:'⌂',listing:'✎',cont:'▤',match:'⇄',need:'☆',viewing:'◉',deal:'✓',cust:'☺',task:'☐',fin:'฿',users:'⚙',set:'⚙'};
+
+/* ---------- state ---------- */
+let TOKEN='', D=null, ME=null, view='dash', filter={q:'',a:'',b:''};
+try{ TOKEN=localStorage.getItem('pm_token')||''; }catch(e){}
+const S = () => D;
+const uid=()=>Math.random().toString(36).slice(2,10);
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const fmtN=n=>(Number(n)||0).toLocaleString('th-TH',{maximumFractionDigits:0});
+const fmtD=d=>d?new Date(d+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}):'-';
+const daysTo=d=>Math.ceil((new Date(d+'T00:00:00')-new Date(today()+'T00:00:00'))/86400000);
+const addMonths=(d,m)=>{const x=new Date(d+'T00:00:00');x.setMonth(x.getMonth()+Number(m));return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const byId=(arr,id)=>(arr||[]).find(x=>x.id===id);
+const uName=id=>{const u=byId(D.Users,id);return u?u.name:'-';};
+const pName=id=>{const p=byId(D.Properties,id);return p?p.name:'-';};
+const redemption=c=>Number(c.amount)*(1+Number(c.rate)/100*Number(c.months)/12);
+const tag=(map,k)=>{const v=map[k]||[k,''];return `<span class="tag ${v[1]}">${esc(v[0])}</span>`;};
+const isStaff=()=>ME&&(ME.role==='admin'||ME.role==='staff');
+const isBroker=()=>ME&&ME.role==='broker';
+// ทีมงานจัดการผู้ใช้ทั่วไปได้ แต่แตะบัญชีทีมงาน/ผู้ดูแลระบบและบัญชีตัวเองไม่ได้ (เซิร์ฟเวอร์บังคับซ้ำอีกชั้น)
+const STAFF_ROLES={broker:ROLE.broker,owner:ROLE.owner,buyer:ROLE.buyer};
+const canManage=u=>ME.role==='admin'?true:(isStaff()&&u&&u.id!==ME.id&&!['admin','staff'].includes(u.role));
+const isAgent=()=>isStaff()||isBroker();
+const opts=arr=>Object.fromEntries((arr||[]).map(x=>[x.id,x.name]));
+const usersBy=(...roles)=>D.Users.filter(u=>roles.includes(u.role));
+const staffUsers=()=>D.Users.filter(u=>(u.role==='admin'||u.role==='staff'||u.role==='broker')&&u.status==='active'&&!u.masked);
+// อย่าใช้ backtick กับ URL ที่มี // — ตัวตัดคอมเมนต์ของ Apps Script จะกินท้ายบรรทัดทิ้ง ต้องต่อสตริงด้วย '+'
+const thumb=f=>/^image\//.test(f.mime)?'https://drive.google.com/thumbnail?id='+f.fileId+'&sz=w600':'';
+const cover=pid=>{const f=(D.Files||[]).find(x=>x.property===pid&&/^image\//.test(x.mime));return f?thumb(f):'';};
+/* ---------- แผนที่ พิกัด และการส่งทรัพย์ให้ลูกค้า ----------
+   ข้อควรระวัง: ห้ามเขียน URL ที่มี // ไว้ใน backtick (Apps Script ตัดคอมเมนต์ผิด หน้าเว็บจะขาวทั้งหน้า)
+   URL ทั้งหมดในส่วนนี้จึงเก็บในสตริงเครื่องหมายคำพูดธรรมดา แล้วค่อยนำไปต่อ */
+const LEAFLET_CSS='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+const LEAFLET_JS='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+const OSM_TILES='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const PIN_COLOR={available:'#2F8F5B',reserved:'#C97F0C',pending:'#C39A2B',consign:'#2C5A4E',sold:'#8A9591',withdrawn:'#B9C2BE'};
+// ต้องตรงกับ parseLatLng ใน Code.gs
+function parseLatLng(s){
+  s=String(s||'');
+  const pats=[/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,/[?&](?:q|ll|query|destination)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,/@(-?\d+\.\d+),(-?\d+\.\d+)/,/(-?\d{1,2}\.\d{3,})\s*,\s*(-?\d{1,3}\.\d{3,})/];
+  for(const re of pats){ const m=s.match(re); if(m){ const a=+m[1], b=+m[2]; if(Math.abs(a)<=90&&Math.abs(b)<=180) return [a,b]; } }
+  return null;
+}
+function mapsLink(ll){ return 'https://www.google.com/maps?q='+ll[0]+','+ll[1]; }
+function navLink(ll){ return 'https://www.google.com/maps/dir/?api=1&destination='+ll[0]+','+ll[1]; }
+let LEAFLET=null;
+function loadLeaflet(){   // โหลดไลบรารีแผนที่เฉพาะตอนเปิดแผนที่ครั้งแรก หน้าอื่นไม่ต้องรอ
+  if(LEAFLET) return LEAFLET;
+  LEAFLET=new Promise((res,rej)=>{
+    const css=document.createElement('link'); css.rel='stylesheet'; css.href=LEAFLET_CSS; document.head.appendChild(css);
+    const s=document.createElement('script'); s.src=LEAFLET_JS;
+    s.onload=()=>res(window.L);
+    s.onerror=()=>{ LEAFLET=null; rej(new Error('โหลดแผนที่ไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่')); };
+    document.head.appendChild(s);
+  });
+  return LEAFLET;
+}
+function pinIcon(color){
+  return window.L.divIcon({className:'pm-pin',html:'<span style="background:'+color+'"></span>',iconSize:[28,28],iconAnchor:[14,28],popupAnchor:[0,-26]});
+}
+function mapPopup(p,ll){
+  const st=PSTATUS[p.status]||[p.status,''];
+  const img=cover(p.id), size=[areaText(p),p.type!=='condo'&&Number(p.size_sqm)?p.size_sqm+' ตร.ม.':'',Number(p.bedrooms)?p.bedrooms+' ห้องนอน':''].filter(Boolean).join(' · ');
+  const hl=String(p.highlight||'').replace(/\*\*/g,'').replace(/\s+/g,' ').trim();
+  return '<div class="mappop">'+(img?'<img src="'+esc(img)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'<b>'+esc(p.name)+'</b>'+
+    '<div class="mappop-price">'+(Number(p.price)?fmtN(p.price)+' ฿':'สอบถามราคา')+' <span class="tag '+st[1]+'">'+esc(st[0])+'</span></div>'+
+    '<div class="mappop-meta">'+esc([PTYPE[p.type],PDEAL[p.deal]].filter(Boolean).join(' · '))+'</div>'+
+    (size?'<div class="mappop-meta">ขนาด '+esc(size)+'</div>':'')+
+    '<div class="mappop-meta">'+esc([p.district,p.province].filter(Boolean).join(' '))+'</div>'+
+    (hl?'<div class="mappop-hl">'+esc(hl.length>90?hl.slice(0,89)+'…':hl)+'</div>':'')+
+    '<div class="mappop-btn"><button class="btn sm" onclick="editProp(\''+p.id+'\')">'+(isAgent()?'แก้ไขทรัพย์':'ดูรายละเอียด')+'</button>'+
+    '<a class="btn sm primary" target="_blank" href="'+esc(navLink(ll))+'">นำทาง</a></div></div>';
+}
+let MAPI=null;
+async function vMap(){
+  const pts=D.Properties.map(p=>({p,ll:parseLatLng(p.location)}));
+  const pinned=pts.filter(x=>x.ll), missing=pts.length-pinned.length;
+  head('แผนที่ทรัพย์',pinned.length+' รายการปักหมุดแล้ว'+(missing?' · '+missing+' รายการยังไม่มีหมุด':''),'');
+  const legend=Object.keys(PIN_COLOR).filter(k=>pts.some(x=>x.p.status===k)).map(k=>'<span><i style="background:'+PIN_COLOR[k]+'"></i>'+esc((PSTATUS[k]||[k])[0])+'</span>').join('');
+  const tip=missing&&isAgent()?'<p class="maphint">ทรัพย์ที่ยังไม่มีหมุด: เปิดทรัพย์นั้น แล้วกด "ปักหมุดบนแผนที่" หรือวางลิงก์ Google Maps ลงในช่องลิงก์แผนที่</p>':'';
+  V().innerHTML='<div class="maplegend">'+legend+'</div><div id="mapbox" class="mapwrap"></div>'+tip;
+  let L;
+  try{ L=await loadLeaflet(); }
+  catch(e){ const b=document.getElementById('mapbox'); if(b) b.innerHTML='<div class="empty"><b>โหลดแผนที่ไม่สำเร็จ</b>'+esc(e.message)+'</div>'; return; }
+  const box=document.getElementById('mapbox'); if(!box) return;   // ผู้ใช้เปลี่ยนหน้าไประหว่างโหลด
+  if(MAPI){ try{ MAPI.remove(); }catch(e){} }
+  const m=L.map(box,{zoomControl:false}); MAPI=m;
+  L.control.zoom({position:'bottomright'}).addTo(m);
+  L.tileLayer(OSM_TILES,{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
+  const bounds=[];
+  pinned.forEach(({p,ll})=>{ L.marker(ll,{icon:pinIcon(PIN_COLOR[p.status]||'#8A9591')}).addTo(m).bindPopup(mapPopup(p,ll),{autoPanPadding:[24,24]}); bounds.push(ll); });
+  if(bounds.length) m.fitBounds(bounds,{padding:[36,36],maxZoom:15}); else m.setView([15.5,101],6);
+  setTimeout(()=>m.invalidateSize(),80);
+}
+// ช่อง "ลิงก์แผนที่ / พิกัด" ในฟอร์มทรัพย์: ปุ่มเปิดตัวปักหมุดเต็มจอ
+// เดิมเป็นแผนที่เล็กในฟอร์ม เปิดที่ภาพทั้งประเทศ บนมือถือซูมไม่ได้เพราะอยู่ในหน้าต่างที่เลื่อนได้ แตะทีเดียวหมุดไปไกลร้อยกิโล
+function attachLocationPicker(){
+  const frm=document.getElementById('frm'); const inp=frm&&frm.elements.location;
+  if(!inp||inp.disabled) return;
+  inp.insertAdjacentHTML('afterend','<div class="pickrow"><button type="button" class="btn sm" id="pk_btn">📍 ปักหมุดบนแผนที่</button><span id="pk_hint"></span></div>');
+  const hint=document.getElementById('pk_hint');
+  const show=()=>{ const ll=parseLatLng(inp.value); hint.textContent=ll?('พิกัด '+ll[0].toFixed(5)+', '+ll[1].toFixed(5)):(inp.value?'ยังอ่านพิกัดไม่ได้ ถ้าเป็นลิงก์แบบย่อ ระบบจะแปลงให้ตอนบันทึก':''); };
+  inp.addEventListener('input',show); show();
+  document.getElementById('pk_btn').onclick=()=>openPinPicker(inp,frm);
+}
+// ค้นหาตำแหน่งจากชื่อด้วย OpenStreetMap (ฟรี ไม่ต้องมีคีย์ ใช้เบาๆ ได้) ชื่ออำเภอ/จังหวัดแม่น ชื่อหมู่บ้านอิสระอาจพลาด
+const NOMINATIM='https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=th&accept-language=th&limit=1&q=';
+async function geoFind(q){
+  try{ const r=await (await fetch(NOMINATIM+encodeURIComponent(q))).json();
+    if(r&&r[0]) return {ll:[+r[0].lat,+r[0].lon],name:r[0].display_name||q,type:r[0].addresstype||''}; }catch(e){}
+  return null;
+}
+function areaQuery(frm){   // "อำเภอเมืองลำปาง จังหวัดลำปาง" — รูปแบบนี้ค้นเจอแม่นที่สุด
+  const prov=String((frm.elements.province||{}).value||'').trim().replace(/^(จ\.|จังหวัด)\s*/,'');
+  const dist=String((frm.elements.district||{}).value||'').trim().replace(/^(อ\.|อำเภอ|เขต)\s*/,'');
+  const bkk=/กรุงเทพ/.test(prov);
+  return {prov,dist,
+    district:dist?((bkk?'เขต':'อำเภอ')+(dist==='เมือง'&&prov?'เมือง'+prov:dist)+(prov?(bkk?' ':' จังหวัด')+prov:'')):'',
+    province:prov?(bkk?prov:'จังหวัด'+prov):''};
+}
+let PINMAP=null;
+function closePinPicker(){ if(PINMAP){ try{PINMAP.remove();}catch(e){} PINMAP=null; } const w=document.getElementById('pinpick'); if(w) w.remove(); }
+async function openPinPicker(inp,frm){
+  closePinPicker();
+  const w=document.createElement('div'); w.id='pinpick'; w.className='pinpick';
+  w.innerHTML='<div class="pp-top"><input id="pp_q" type="search" placeholder="ค้นหา อำเภอ ตำบล หรือสถานที่ใกล้แปลง" enterkeyhint="search"><button type="button" class="btn sm" id="pp_go">ค้นหา</button><button type="button" class="btn sm" id="pp_x">ปิด</button></div>'+
+    '<div class="pp-mapwrap"><div id="pp_map"></div><div class="pp-cross"><span></span></div><div class="pp-dot"></div><div class="pp-msg" id="pp_msg"></div></div>'+
+    '<div class="pp-bot"><div class="pp-ll" id="pp_ll">เลื่อนแผนที่ให้หมุดกลางจออยู่บนแปลง แล้วกดใช้ตำแหน่งนี้</div>'+
+    // GPS ใช้ได้เฉพาะใน MINI App (หน้าเว็บ Apps Script อยู่ในกรอบที่เบราว์เซอร์ไม่ให้สิทธิ์ตำแหน่ง)
+    (BOOT.mini&&navigator.geolocation?'<button type="button" class="btn" id="pp_gps" style="margin-bottom:8px">◎ ไปที่ตำแหน่งปัจจุบันของฉัน</button>':'')+
+    '<button type="button" class="btn primary" id="pp_ok">ใช้ตำแหน่งนี้</button>'+
+    '<p class="pp-tip">อีกวิธี: เปิดแอป Google Maps กดค้างที่แปลงให้ขึ้นหมุด แล้วกด แชร์ → คัดลอกลิงก์ มาวางในช่องลิงก์แผนที่</p></div>';
+  document.body.appendChild(w);
+  const msg=t=>{ const e=document.getElementById('pp_msg'); if(e){ e.textContent=t||''; e.hidden=!t; } };
+  document.getElementById('pp_x').onclick=closePinPicker;
+  let L; try{ L=await loadLeaflet(); }catch(e){ msg(e.message); return; }
+  if(!document.getElementById('pp_map')) return;   // ปิดไปก่อนโหลดเสร็จ
+  const ll=parseLatLng(inp.value);
+  const m=L.map('pp_map',{zoomControl:false}).setView(ll||[15.5,101],ll?17:6); PINMAP=m;
+  L.control.zoom({position:'bottomright'}).addTo(m);
+  L.tileLayer(OSM_TILES,{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
+  const out=document.getElementById('pp_ll');
+  const upd=()=>{ const c=m.getCenter(); out.textContent='พิกัด '+c.lat.toFixed(5)+', '+c.lng.toFixed(5)+(m.getZoom()<14?' · ซูมเข้าอีกหน่อยให้เห็นแปลงชัด':''); };
+  m.on('move',upd);
+  setTimeout(()=>m.invalidateSize(),60);
+  const gps=document.getElementById('pp_gps');
+  if(gps) gps.onclick=()=>{ msg('กำลังหาตำแหน่ง…');
+    navigator.geolocation.getCurrentPosition(g=>{ if(PINMAP!==m) return; m.setView([g.coords.latitude,g.coords.longitude],18); msg('อยู่ที่ตำแหน่งปัจจุบันแล้ว (คลาดเคลื่อนราว '+Math.round(g.coords.accuracy)+' ม.) เลื่อนปรับได้'); setTimeout(()=>msg(''),5000); },
+      ()=>msg('อ่านตำแหน่งไม่ได้ เปิด GPS และอนุญาตให้ LINE ใช้ตำแหน่ง แล้วลองใหม่'),{enableHighAccuracy:true,timeout:15000}); };
+  const q=areaQuery(frm);
+  const go=async(text,zoom)=>{ const hit=await geoFind(text); if(hit&&PINMAP===m){ m.setView(hit.ll,zoom); msg('ไปที่: '+hit.name); setTimeout(()=>msg(''),4000); } return hit; };
+  if(!ll){
+    msg(q.district||q.province?'กำลังพาไปที่ '+(q.dist||q.prov)+'…':'ซูมเข้าไปที่ตั้งแปลง แล้วเลื่อนให้หมุดกลางจออยู่บนแปลง');
+    const hit=(q.district&&await go(q.district,14))||(q.province&&await go(q.province,10));
+    if(!hit&&(q.district||q.province)) msg('หาตำแหน่ง '+(q.dist||q.prov)+' ไม่เจอ ลองพิมพ์ค้นหาด้านบน หรือซูมเอง');
+  }
+  upd();
+  const search=async()=>{ const t=document.getElementById('pp_q').value.trim(); if(!t) return;
+    msg('กำลังค้นหา…'); const hit=await go(t+(q.prov&&t.indexOf(q.prov)<0?' '+q.prov:''),16); if(!hit) msg('ไม่พบ "'+t+'" ลองชื่ออำเภอหรือตำบล'); };
+  document.getElementById('pp_go').onclick=search;
+  document.getElementById('pp_q').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); search(); } });
+  document.getElementById('pp_ok').onclick=()=>{
+    if(m.getZoom()<13){ msg('ซูมเข้าให้เห็นแปลงก่อน (ตอนนี้ยังไกลเกินไป)'); return; }
+    const c=m.getCenter(); inp.value=mapsLink([+c.lat.toFixed(6),+c.lng.toFixed(6)]);
+    inp.dispatchEvent(new Event('input'));
+    closePinPicker(); toast('ปักหมุดแล้ว กดบันทึกเพื่อเก็บตำแหน่ง');
+  };
+}
+function publicLink(id,src){ return BOOT.appUrl+'?form=lead&p='+encodeURIComponent(id)+'&src='+encodeURIComponent(src||('แชร์-'+((ME&&ME.name)||'ทีมงาน'))); }
+function lineShareLink(text){ return 'https://line.me/R/share?text='+encodeURIComponent(text); }
+function shareText(p,url){ return [p.name,Number(p.price)?fmtN(p.price)+' บาท':'สอบถามราคา',[p.district,p.province].filter(Boolean).join(' '),'','ดูรูปและรายละเอียด: '+url].join('\n'); }
+function copyText(t,msg){
+  try{ navigator.clipboard.writeText(t).then(()=>toast(msg||'คัดลอกแล้ว'),()=>prompt('คัดลอกลิงก์นี้',t)); }
+  catch(e){ prompt('คัดลอกลิงก์นี้',t); }
+}
+// กล่อง "ส่งให้ลูกค้า" ในหน้าทรัพย์ของทีมงาน ลิงก์พาไปหน้าทรัพย์สาธารณะที่ลูกค้าฝากเบอร์ได้ และติดชื่อคนส่งไปกับลีด
+function shareBox(p){
+  const ok=['available','reserved'].includes(p.status), url=publicLink(p.id);
+  return '<h4>ส่งให้ลูกค้า</h4>'+
+    (ok?'':'<div class="li" style="color:var(--amber)">ตั้งสถานะเป็น "พร้อมขาย" หรือ "ติดจอง" ก่อน ลูกค้าถึงจะเห็นรายละเอียดทรัพย์</div>')+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+
+    '<a class="btn sm" style="background:#06C755;border-color:#06C755;color:#fff" target="_top" href="'+esc(lineShareLink(shareText(p,url)))+'">ส่งทาง LINE</a>'+
+    '<button type="button" class="btn sm" data-url="'+esc(url)+'" onclick="copyText(this.dataset.url,\'คัดลอกลิงก์ทรัพย์แล้ว\')">คัดลอกลิงก์</button>'+
+    '<a class="btn sm" target="_blank" href="'+esc(publicLink(p.id,'ตัวอย่าง'))+'">ดูหน้าที่ลูกค้าเห็น</a></div>';
+}
+
+/* ---------- server ---------- */
+// คำสั่งที่เขียนข้อมูล — ห้ามส่งซ้อนกัน กันกดซ้ำแล้วได้รายการซ้ำ (เซิร์ฟเวอร์สร้าง id ใหม่ทุกครั้งที่ยังไม่มี id)
+const MUTATING=['save','delete','setUser','changePin','uploadFile','postDealIncome','requestContact','completeProfile','register','login','logout','submitLead'];
+let INFLIGHT=false;
+function call(action,payload){
+  const lock=MUTATING.includes(action);
+  if(lock&&INFLIGHT) return Promise.reject(new Error('กำลังบันทึกรายการก่อนหน้าอยู่ กรุณารอสักครู่'));
+  if(lock) INFLIGHT=true;
+  const done=()=>{ busy(false); if(lock) INFLIGHT=false; };
+  busy(true);
+  if(BOOT.mini){   // LINE MINI App: หน้าจออยู่นอก Apps Script เรียก API ผ่าน doPost (text/plain = ไม่ต้อง preflight)
+    return fetch(BOOT.api,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({mini:1,token:TOKEN,action:action,p:payload||{}})})
+      .then(r=>r.json()).then(r=>{ done(); if(r&&r.ok) return r.data; throw new Error(r?r.error:'ไม่ได้รับคำตอบ'); },
+        e=>{ done(); throw new Error('เชื่อมต่อระบบไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่'); });
+  }
+  return new Promise((res,rej)=>{
+    google.script.run.withSuccessHandler(r=>{done(); if(r&&r.ok) res(r.data); else rej(new Error(r?r.error:'ไม่ได้รับคำตอบ'));})
+      .withFailureHandler(e=>{done();rej(e);}).api(TOKEN,action,payload||{});
+  });
+}
+// ใช้กับปุ่มทุกปุ่มที่เขียนข้อมูล: onclick="act(this,()=>ฟังก์ชัน(),'กำลัง…')"
+// ล็อกปุ่ม เปลี่ยนข้อความบอกสถานะ แล้วคืนค่าเดิมเมื่อเสร็จ
+async function act(el,fn,label){
+  const b=(el&&el.tagName==='BUTTON')?el:null;
+  if(b&&b.disabled) return;
+  if(b){ b.dataset.lbl=b.innerHTML; b.disabled=true; b.innerHTML=label||'กำลังทำงาน…'; }
+  try{ return await fn(); }
+  catch(e){ toast(e.message||String(e)); }
+  finally{ if(b&&b.isConnected){ b.disabled=false; b.innerHTML=b.dataset.lbl; } }
+}
+function busy(on){document.getElementById('busy').classList.toggle('on',on);}
+async function reload(){ D=await call('bootstrap'); ME=D.me; render(); }
+async function saveRow(table,row,msg){ try{ const saved=await call('save',{table,row}); closeModal(); await reload(); toast(msg||'บันทึกแล้ว'); return saved; }catch(e){ toast(e.message); } }
+async function delRow(table,id,msg){ if(!confirm('ยืนยันลบรายการนี้?')) return; try{ await call('delete',{table,id}); closeModal(); await reload(); toast(msg||'ลบแล้ว'); }catch(e){ toast(e.message); } }
+
+/* ---------- auth screens ---------- */
+const LINE_SVG='<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 5.64 2 10.1c0 4 3.55 7.35 8.34 7.99.33.07.77.22.88.5.1.26.07.66.03.92l-.14.85c-.04.26-.2 1 .88.55 1.08-.46 5.8-3.42 7.92-5.85C21.36 13.47 22 11.86 22 10.1 22 5.64 17.52 2 12 2z"/></svg>';
+function lineUrl(state){
+  if(!BOOT.lineChannelId) return '';
+
+  return 'https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id='+encodeURIComponent(BOOT.lineChannelId)+'&redirect_uri='+encodeURIComponent(BOOT.appUrl)+'&state='+encodeURIComponent(state)+'&scope=profile%20openid%20email&bot_prompt=normal';
+}
+
+/* ---------- ฟอร์มรับลีดสาธารณะ (เปิดด้วย ?form=lead) ---------- */
+function showLeadForm(){
+  document.getElementById('app').classList.remove('on'); document.getElementById('auth').style.display='flex';
+  const pr=(BOOT.lead||{}).property;
+  // มาจากลิงก์ที่ระบุทรัพย์ (ส่งให้ลูกค้า / QR ป้ายหน้าทรัพย์ / ปุ่มดูรายละเอียดในแชต) → โชว์ทรัพย์เต็มๆ ก่อนฟอร์ม
+  const photos=pr?(pr.photos&&pr.photos.length?pr.photos:(pr.image?[pr.image]:[])):[];
+  const card=pr?`<div class="pubcard">
+      ${photos.length?`<img class="pubhero" id="pub_hero" src="${esc(photos[0])}" alt="" onerror="this.style.display='none'">`:''}
+      ${photos.length>1?`<div class="pubstrip">${photos.map((u,i)=>`<img src="${esc(u)}" alt="" class="${i?'':'on'}" onclick="pubShow(this)">`).join('')}</div>`:''}
+      <div class="pubbody"><div class="pubname">${esc(pr.name)}</div>
+      <div class="pubprice">${pr.price?fmtN(pr.price)+' ฿':'สอบถามราคา'} ${pr.status==='reserved'?'<span class="tag amber">ติดจอง</span>':''}</div>
+      <div class="pubmeta">${esc(pr.detail)}</div>
+      ${pr.highlight?`<div class="pubhl">${boldLite(pr.highlight)}</div>`:''}
+      ${pr.ll?'<div id="pub_map" class="pubmap"></div>':''}
+      ${pr.nav?`<a class="btn" target="_blank" href="${esc(pr.nav)}">📍 ${pr.ll?'นำทางไปที่ทรัพย์':'ดูแผนที่ / นำทาง'}</a>`:''}</div></div>`:'';
+  document.getElementById('authbox').innerHTML=`${card}<h1>${pr?'สนใจทรัพย์นี้?':'ฝากข้อมูลติดต่อ'}</h1>
+    <p>${pr?'ฝากชื่อและเบอร์ไว้ ทีมงานจะโทรกลับเพื่อนัดดูและให้ข้อมูลเพิ่ม':'กรอกชื่อและเบอร์โทร ทีมงานจะติดต่อกลับโดยเร็วที่สุด'}</p>
+    <div class="f"><label>ชื่อ-นามสกุล</label><input id="ld_name" autocomplete="name"></div>
+    <div class="f"><label>เบอร์โทรศัพท์</label><input id="ld_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0812345678"></div>
+    <div class="f" ${pr?'hidden':''}><label>คุณต้องการ</label><select id="ld_intent" onchange="leadToggle()">
+      ${[['buy','ซื้อ / เช่า อสังหาฯ'],['sell','ฝากขายทรัพย์ของฉัน'],['consign','ขายฝาก / ต้องการเงินด่วน']].map(([k,l])=>`<option value="${k}" ${BOOT.intent===k?'selected':''}>${l}</option>`).join('')}</select></div>
+    <div id="ld_buy">
+      <div class="f"><label>ประเภทที่สนใจ</label><select id="ld_type"><option value="">- ไม่ระบุ -</option>${Object.entries(PTYPE).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></div>
+      <div class="f"><label>จังหวัด / ทำเล</label><input id="ld_province"></div>
+      <div class="f"><label>งบประมาณไม่เกิน (บาท)</label><input id="ld_max" type="number" inputmode="numeric" step="any"></div>
+    </div>
+    <div class="f"><label>ข้อความเพิ่มเติม</label><textarea id="ld_msg" rows="2"></textarea></div>
+    <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Website</label><input id="ld_hp" tabindex="-1" autocomplete="off"></div>
+    <button class="btn primary" id="ld_go">ส่งข้อมูล</button>
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px">ข้อมูลของคุณใช้เพื่อติดต่อกลับเท่านั้น</p>`;
+  leadToggle();
+  // แผนที่ตำแหน่งทรัพย์ในหน้าลูกค้า: บนมือถือปิดการลากด้วยนิ้วเดียว ไม่ให้แย่งการเลื่อนหน้า (ซูมด้วยปุ่ม +/−)
+  if(pr&&pr.ll) loadLeaflet().then(L=>{
+    const el=document.getElementById('pub_map'); if(!el) return;
+    const m=L.map(el,{zoomControl:false,scrollWheelZoom:false,dragging:!L.Browser.mobile}).setView(pr.ll,15);
+    L.control.zoom({position:'bottomright'}).addTo(m);
+    L.tileLayer(OSM_TILES,{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
+    L.marker(pr.ll,{icon:pinIcon('#C39A2B')}).addTo(m);
+    setTimeout(()=>m.invalidateSize(),80);
+  },()=>{ const el=document.getElementById('pub_map'); if(el) el.remove(); });
+  const go=document.getElementById('ld_go');
+  const val=id=>document.getElementById(id).value.trim();
+  go.onclick=()=>act(go,async()=>{
+    const r=await call('submitLead',{name:val('ld_name'),phone:val('ld_phone'),intent:val('ld_intent'),
+      type:val('ld_type'),province:val('ld_province'),maxPrice:val('ld_max'),message:val('ld_msg'),
+      website:val('ld_hp'),src:BOOT.src||'',propertyId:pr?pr.id:''});
+    leadThanks(r.message);
+  },'กำลังส่ง…');
+  document.getElementById('authbox').querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')go.click();}));
+}
+// ลูกค้าที่มาจากหน้าทรัพย์รู้อยู่แล้วว่าสนใจอะไร ไม่ต้องถามประเภท/ทำเล/งบซ้ำ
+function leadToggle(){ const el=document.getElementById('ld_buy'); if(el) el.hidden=!!(BOOT.lead&&BOOT.lead.property)||document.getElementById('ld_intent').value!=='buy'; }
+function boldLite(s){ return esc(s).replace(/\*\*([^*\n]+?)\*\*/g,'<b>$1</b>'); }
+function pubShow(img){ const h=document.getElementById('pub_hero'); if(h){ h.src=img.src; h.style.display=''; } document.querySelectorAll('.pubstrip img').forEach(x=>x.classList.toggle('on',x===img)); }
+function leadThanks(msg){
+  document.getElementById('authbox').innerHTML=`<h1 style="color:var(--green)">ส่งข้อมูลเรียบร้อย</h1>
+    <p style="font-size:15px;color:var(--text)">${esc(msg||'ทีมงานจะติดต่อกลับโดยเร็วที่สุด')}</p>
+    ${BOOT.lineChannelId?`<p style="color:var(--muted);font-size:13.5px;margin-top:10px">อยากดูทรัพย์ทั้งหมดก่อน? เพิ่มเพื่อนใน LINE แล้วพิมพ์คำว่า "ทรัพย์" ได้เลย</p>`:''}`;
+}
+function showPending(pd){   // ผู้ใช้ LINE ใหม่ที่ยังรออนุมัติ
+  document.getElementById('app').classList.remove('on'); document.getElementById('auth').style.display='flex';
+  document.getElementById('authbox').innerHTML=`<h1>ยินดีต้อนรับ ${esc(pd.name)}</h1><p>บัญชีของคุณรอผู้ดูแลระบบอนุมัติ กรอกข้อมูลเพิ่มเพื่อให้ทีมงานติดต่อกลับ</p>
+    <div class="f"><label>ชื่อที่ใช้แสดง</label><input id="p_name" value="${esc(pd.name)}"></div><div class="f"><label>โทรศัพท์</label><input id="p_phone" type="tel" value="${esc(pd.phone||'')}"></div>
+    <div class="f"><label>คุณคือ</label><select id="p_role"><option value="buyer" ${pd.role==='buyer'?'selected':''}>ผู้ซื้อ / นักลงทุน</option><option value="owner" ${pd.role==='owner'?'selected':''}>เจ้าของทรัพย์</option><option value="broker" ${pd.role==='broker'?'selected':''}>นายหน้าภายนอก (นำทรัพย์มาลงขาย)</option></select></div>
+    <button class="btn primary" id="p_go">บันทึกและรออนุมัติ</button><div class="sw"><button onclick="showAuth('login')">กลับหน้าเข้าสู่ระบบ</button></div>`;
+  const pg=document.getElementById('p_go');
+  pg.onclick=()=>act(pg,async()=>{ const r=await call('completeProfile',{name:document.getElementById('p_name').value.trim(),phone:document.getElementById('p_phone').value.trim(),role:document.getElementById('p_role').value}); TOKEN=''; if(r.status==='active'){ TOKEN=pd.token; try{localStorage.setItem('pm_token',TOKEN);}catch(e){} return enter(); } toast('บันทึกแล้ว เมื่อได้รับอนุมัติให้เข้าด้วย LINE อีกครั้ง'); showAuth('login'); },'กำลังบันทึก…');
+  TOKEN=pd.token;
+}
+function showAuth(mode){
+  document.getElementById('app').classList.remove('on'); document.getElementById('auth').style.display='flex';
+  const b=document.getElementById('authbox');
+  const hasLine=!!BOOT.lineChannelId||!!BOOT.liffReady;
+  // state ออกโดยเซิร์ฟเวอร์ทุกครั้งที่เปิดหน้า · ใน MINI App ใช้ liff.login() แทน
+  const lineBtn=t=>!hasLine?'':BOOT.mini?`<button class="btn line" onclick="miniLogin()">${LINE_SVG} ${t}</button>`:`<a class="btn line" target="_top" href="${lineUrl(BOOT.loginState)}">${LINE_SVG} ${t}</a>`;
+  // ตั้งค่า LINE แล้ว → หน้าแรกเป็น LINE Login ล้วน อีเมล+PIN ซ่อนไว้เป็นทางสำรอง
+  if(mode!=='register'&&mode!=='email'&&hasLine){
+    b.innerHTML=`<h1>เข้าสู่ระบบ</h1><p>${FROM_RICH_MENU?'แตะปุ่มสีเขียวด้านล่าง เข้าได้ทันทีด้วยบัญชี LINE นี้ ไม่ต้องจำรหัส':'ระบบบริหารทรัพย์ นายหน้า และขายฝาก'}</p>
+      ${lineBtn('เข้าสู่ระบบด้วย LINE')}
+      <p style="font-size:12.5px;color:var(--muted);text-align:center;margin-top:10px">ยังไม่มีบัญชี? กดปุ่มนี้ได้เลย ระบบจะพาไปกรอกข้อมูลและรออนุมัติ</p>
+      <div class="or">หรือ</div>
+      <div class="sw"><button onclick="showAuth('email')">เข้าด้วยอีเมล + PIN</button></div>`;
+    return;
+  }
+  if(mode==='register') b.innerHTML=`<h1>สมัครใช้งาน</h1><p>สมัครแล้วรอผู้ดูแลระบบอนุมัติและกำหนดบทบาท</p>
+    <div class="f"><label>ชื่อ-นามสกุล</label><input id="r_name"></div><div class="f"><label>อีเมล</label><input id="r_email" type="email" inputmode="email"></div>
+    <div class="f"><label>โทรศัพท์</label><input id="r_phone" type="tel"></div><div class="f"><label>LINE ID</label><input id="r_line"></div>
+    <div class="f"><label>คุณคือ</label><select id="r_role"><option value="buyer">ผู้ซื้อ / นักลงทุน</option><option value="owner">เจ้าของทรัพย์</option><option value="broker">นายหน้าภายนอก (นำทรัพย์มาลงขาย)</option></select></div>
+    <div class="f"><label>รหัส PIN (ตัวเลข 4–8 หลัก)</label><input id="r_pin" type="password" inputmode="numeric"></div>
+    <button class="btn primary" id="r_go">สมัคร</button>${hasLine?`<div class="or">หรือ</div>${lineBtn('สมัครด้วย LINE (ไม่ต้องจำ PIN)')}`:''}<div class="sw">มีบัญชีแล้ว? <button onclick="showAuth('login')">เข้าสู่ระบบ</button></div>`;
+  else b.innerHTML=`<h1>เข้าสู่ระบบ</h1><p>ใช้อีเมลและรหัส PIN</p>
+    <div class="f"><label>อีเมล</label><input id="l_email" type="email" inputmode="email"></div><div class="f"><label>รหัส PIN</label><input id="l_pin" type="password" inputmode="numeric"></div>
+    <button class="btn primary" id="l_go">เข้าสู่ระบบ</button>${hasLine?`<div class="or">หรือ</div>${lineBtn('เข้าสู่ระบบด้วย LINE')}`:''}<div class="sw">ยังไม่มีบัญชี? <button onclick="showAuth('register')">สมัครใช้งาน</button></div>`;
+  const go=document.getElementById(mode==='register'?'r_go':'l_go');
+  go.onclick=()=>act(go,async()=>{
+    if(mode==='register'){ const r=await call('register',{name:v('r_name'),email:v('r_email'),phone:v('r_phone'),line:v('r_line'),role:v('r_role'),pin:v('r_pin')}); toast(r.message); showAuth('email'); document.getElementById('l_email').value=v2; }
+    else { const r=await call('login',{email:v('l_email'),pin:v('l_pin')}); TOKEN=r.token; try{localStorage.setItem('pm_token',TOKEN);}catch(e){} await enter(); }
+  },mode==='register'?'กำลังสมัคร…':'กำลังเข้าสู่ระบบ…');
+  let v2=''; const v=id=>{const x=document.getElementById(id).value.trim(); if(id==='r_email') v2=x; return x;};
+  b.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')go.click();}));
+}
+async function enter(){
+  try{ D=await call('bootstrap'); ME=D.me; }
+  catch(e){
+    TOKEN=''; try{localStorage.removeItem('pm_token');}catch(x){}
+    toast(e.message); return showAuth('login');
+  }
+  enterUI();
+}
+function enterUI(){
+  document.getElementById('auth').style.display='none'; document.getElementById('app').classList.add('on');
+  // ?v=... จากปุ่มบน rich menu เปิดหน้านั้นเลย (ถ้าบทบาทนี้มีสิทธิ์เห็น) ใช้ครั้งเดียวแล้วล้างทิ้ง
+  view=(BOOT.view&&NAV[ME.role].includes(BOOT.view))?BOOT.view:NAV[ME.role][0]; BOOT.view='';
+  render();
+  // ?p=<รหัสทรัพย์> จากปุ่ม "เปิดในระบบ" บนการ์ดทรัพย์ในแชต LINE เปิดทรัพย์นั้นทันที
+  if(BOOT.pid){ const pid=BOOT.pid; BOOT.pid=''; if(byId(D.Properties,pid)) editProp(pid); }
+}
+async function logout(){
+  try{ await call('logout'); }catch(e){}   // เพิกถอนโทเคนฝั่งเซิร์ฟเวอร์ด้วย ไม่ใช่ลบแค่ในเครื่อง
+  TOKEN=''; try{localStorage.removeItem('pm_token');}catch(e){}
+  D=null; ME=null; showAuth('login');
+}
+
+/* ---------- render ---------- */
+function render(){
+  const nav=NAV[ME.role], pend=isStaff()?D.Users.filter(u=>u.status==='pending').length:0;
+  const dueN=isStaff()?D.Contracts.filter(c=>['active','extended'].includes(c.status)&&daysTo(c.due)<=30).length:0;
+  const badge=id=>id==='users'&&pend?`<span class="badge">${pend}</span>`:id==='cont'&&dueN?`<span class="badge">${dueN}</span>`:'';
+  document.getElementById('sidenav').innerHTML=nav.map(id=>`<button class="nav ${id===view?'on':''}" onclick="go('${id}')"><span style="width:18px;text-align:center">${NAVI[id]}</span>${NAVL[id]}${badge(id)}</button>`).join('');
+  document.getElementById('tabbar').innerHTML=nav.map(id=>`<button class="${id===view?'on':''}" onclick="go('${id}')"><span class="ic">${NAVI[id]}</span>${NAVL[id]}${badge(id)}</button>`).join('');
+  document.getElementById('whoami').textContent=ME.name; document.getElementById('whorole').textContent=ROLE[ME.role]+(ME.email?' · '+ME.email:ME.lineId?' · LINE':'');
+  const pic=document.getElementById('whopic'); if(ME.picture){pic.src=ME.picture;pic.style.display='block';} else pic.style.display='none';
+  ({map:vMap,dash:vDash,odash:vODash,market:vMarket,prop:vProp,listing:vListing,cont:vCont,match:vMatch,need:vNeed,viewing:vViewing,deal:vDeal,cust:vCust,task:vTask,fin:vFin,users:vUsers,set:vSet})[view]();
+  window.scrollTo({top:0});
+}
+function go(v){view=v;filter={q:'',a:'',b:''};render();}
+function head(t,sub,actions=''){document.getElementById('title').textContent=t;document.getElementById('subtitle').textContent=sub;document.getElementById('actions').innerHTML=actions;}
+const V=()=>document.getElementById('view');
+function toolbar(ph,selA,selB){
+  const sel=(s,key)=>s?`<select onchange="filter.${key}=this.value;render()"><option value="">${s.label}</option>${Object.entries(s.map).map(([k,v])=>`<option value="${k}" ${filter[key]===k?'selected':''}>${Array.isArray(v)?v[0]:v}</option>`).join('')}</select>`:'';
+  return `<div class="toolbar"><input placeholder="${ph}" value="${esc(filter.q)}" oninput="filter.q=this.value;render()">${sel(selA,'a')}${sel(selB,'b')}</div>`;
+}
+const match=s=>!filter.q||String(s).toLowerCase().includes(filter.q.toLowerCase());
+const empty=(b,s)=>`<div class="empty"><b>${b}</b>${s}</div>`;
+const selMap=m=>Object.fromEntries(Object.entries(m).map(([k,v])=>[k,Array.isArray(v)?v[0]:v]));
+
+/* ---------- dashboard (staff) ---------- */
+function vDash(){
+  head('ภาพรวม',new Date().toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),`<button class="btn primary" onclick="editProp()">+ เพิ่มทรัพย์</button>`);
+  const act=D.Contracts.filter(c=>['active','extended'].includes(c.status));
+  const dueC=act.filter(c=>daysTo(c.due)<=60).map(c=>({d:daysTo(c.due),k:'ขายฝาก',n:pName(c.property),m:`${uName(c.seller)} · สินไถ่ ${fmtN(redemption(c))} ฿`,fn:`editCont('${c.id}')`}));
+  const dueL=D.Listings.filter(l=>l.status==='active'&&daysTo(l.due)<=30).map(l=>({d:daysTo(l.due),k:'สัญญานายหน้า',n:pName(l.property),m:`เจ้าของ ${uName(l.ownerUser)} · ค่าคอม ${l.commissionPct}%`,fn:`editListing('${l.id}')`}));
+  const due=[...dueC,...dueL].sort((a,b)=>a.d-b.d);
+  const invested=act.reduce((s,c)=>s+Number(c.amount),0), toReceive=act.reduce((s,c)=>s+redemption(c),0);
+  const tasks=D.Tasks.filter(t=>!t.done&&t.date<=today()).sort((a,b)=>a.date.localeCompare(b.date));
+  const viewingsToday=D.Viewings.filter(v=>v.date===today());
+  const ym=today().slice(0,7), inc=D.Transactions.filter(t=>t.type==='income'&&t.date.startsWith(ym)).reduce((s,t)=>s+Number(t.amount),0);
+  const pipeline=D.Deals.filter(d=>['negotiating','reserved'].includes(d.status)).reduce((s,d)=>s+Number(d.commissionAmt),0);
+  V().innerHTML=`<div class="due-strip"><h2>ครบกำหนดเร็วๆ นี้ — ขายฝาก (60 วัน) และสัญญานายหน้า (30 วัน)</h2><div class="due-list">${due.length?due.map(x=>`<div class="due-item ${x.d<=7?'hot':''}" onclick="${x.fn}"><div class="k">${x.k}</div><div class="d">${x.d<0?'เกิน '+(-x.d):x.d}<small>วัน</small></div><div class="n">${esc(x.n)}</div><div class="m">${esc(x.m)}</div></div>`).join(''):'<div class="due-empty">ไม่มีรายการใกล้ครบกำหนด</div>'}</div></div>
+  <div class="stats"><div class="stat"><div class="l">ทรัพย์ในมือ</div><div class="v">${D.Properties.length} <small>พร้อมขาย ${D.Properties.filter(p=>p.status==='available').length}</small></div></div>
+  <div class="stat"><div class="l">เงินลงทุนขายฝากคงค้าง</div><div class="v">${fmtN(invested)} <small>฿ · ${act.length} สัญญา</small></div></div>
+  <div class="stat"><div class="l">ค่าคอมในดีลที่กำลังเจรจา</div><div class="v">${fmtN(pipeline)} <small>฿</small></div></div>
+  <div class="stat"><div class="l">รายรับเดือนนี้</div><div class="v">${fmtN(inc)} <small>฿ · สินไถ่รอรับ ${fmtN(toReceive)}</small></div></div></div>
+  <div class="grid2"><div class="card"><h3>งานวันนี้และค้างทำ</h3><div class="rows" style="margin-top:8px">${tasks.slice(0,8).map(rowTask).join('')||empty('ไม่มีงานค้าง','')}</div></div>
+  <div class="card"><h3>นัดชมวันนี้ · ผู้ใช้รออนุมัติ</h3><div class="rows" style="margin-top:8px">${viewingsToday.map(rowViewing).join('')}${isStaff()?D.Users.filter(u=>u.status==='pending').map(u=>`<div class="row" onclick="go('users')"><div><div class="t">${esc(u.name)}</div><div class="s">สมัครเป็น ${ROLE[u.role]} · ${esc(u.email)}</div></div><div class="right">${tag(USTATUS,'pending')}</div></div>`).join(''):''}${!viewingsToday.length&&!D.Users.some(u=>u.status==='pending')?empty('ไม่มีนัดชมวันนี้',''):''}</div></div></div>`;
+}
+/* owner dashboard */
+function vODash(){
+  head('ทรัพย์ของฉัน',`${D.Properties.length} รายการ`,`<button class="btn primary" onclick="editProp()">+ ส่งทรัพย์ให้นายหน้า</button>`);
+  V().innerHTML=`<div class="grid3">${D.Properties.map(pcard).join('')||empty('ยังไม่มีทรัพย์','กด “ส่งทรัพย์ให้นายหน้า” เพื่อเริ่ม')}</div>
+  <div class="card" style="margin-top:14px"><h3>นัดชมทรัพย์ของฉัน</h3><div class="rows" style="margin-top:8px">${D.Viewings.sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10).map(rowViewing).join('')||empty('ยังไม่มีนัดชม','')}</div></div>`;
+}
+/* buyer market */
+function vMarket(){
+  head('ทรัพย์เปิดขาย',`${D.Properties.length} รายการ`,'');
+  const list=D.Properties.filter(p=>match(p.name+p.province+p.district)&&(!filter.a||p.type===filter.a));
+  V().innerHTML=toolbar('ค้นหา จังหวัด อำเภอ…',{label:'ทุกประเภท',map:PTYPE})+`<div class="grid3">${list.map(pcard).join('')||empty('ไม่พบทรัพย์','')}</div>`;
+}
+function pcard(p){
+  const img=cover(p.id);
+  return `<div class="pcard" onclick="editProp('${p.id}')">${img?`<img src="${img}" loading="lazy" alt="">`:'<div class="noimg">ยังไม่มีรูป</div>'}<div class="b"><div class="t">${esc(p.name)}</div><div class="s">${PTYPE[p.type]||''} · ${esc([p.district,p.province].filter(Boolean).join(' '))} ${areaText(p)?'· '+areaText(p):''}</div><div class="p">${Number(p.price)?fmtN(p.price)+' ฿':'สอบถามราคา'} ${tag(PSTATUS,p.status)}</div></div></div>`;
+}
+
+/* ---------- properties ---------- */
+function areaText(p){ if(p.type==='condo') return p.size_sqm?`${p.size_sqm} ตร.ม.`:''; const a=[];if(Number(p.area_rai))a.push(`${p.area_rai} ไร่`);if(Number(p.area_ngan))a.push(`${p.area_ngan} งาน`);if(Number(p.area_wa))a.push(`${p.area_wa} ตร.วา`);return a.join(' '); }
+function rowProp(p){ return `<div class="row" onclick="editProp('${p.id}')"><div><div class="t">${esc(p.name)}</div><div class="s">${PTYPE[p.type]||''} · ${esc([p.district,p.province].filter(Boolean).join(' '))} ${areaText(p)?'· '+areaText(p):''}${isAgent()?' · ดูแล: '+esc(uName(p.brokerUser)):''}</div></div><div class="right">${fmtN(p.price)} ฿<div class="s">${tag(PSTATUS,p.status)}</div></div></div>`; }
+function vProp(){
+  head('ทรัพย์',`${D.Properties.length} รายการ`,`<button class="btn primary" onclick="editProp()">+ เพิ่มทรัพย์</button>`);
+  const list=D.Properties.filter(p=>match(p.name+p.deed+p.province+p.district+p.note)&&(!filter.a||p.type===filter.a)&&(!filter.b||p.status===filter.b));
+  V().innerHTML=toolbar('ค้นหาชื่อ โฉนด จังหวัด…',{label:'ทุกประเภท',map:PTYPE},{label:'ทุกสถานะ',map:PSTATUS})+`<div class="card"><div class="rows">${list.map(rowProp).join('')||empty('ไม่พบทรัพย์','')}</div></div>`;
+}
+function editProp(id){
+  const p=id?byId(D.Properties,id):{type:'land',deal:'sale',status:isAgent()?'available':'pending',brokerUser:isAgent()?ME.id:'',ownerUser:ME.role==='owner'?ME.id:''};
+  const mine=!id||isStaff()||(isBroker()&&p.brokerUser===ME.id)||(ME.role==='owner'&&p.ownerUser===ME.id);
+  const ro=ME.role==='buyer'||!mine, owner=ME.role==='owner';
+  const fields=[{k:'name',l:'ชื่อทรัพย์ / หัวข้อประกาศ',full:1},{k:'type',l:'ประเภท',t:'select',o:PTYPE},{k:'deal',l:'รูปแบบดีล',t:'select',o:PDEAL},
+    ...(isAgent()?[{k:'status',l:'สถานะ',t:'select',o:selMap(PSTATUS)}]:[]),{k:'deed',l:'เลขโฉนด / เลขห้อง'},
+    {k:'area_rai',l:'ไร่',t:'number'},{k:'area_ngan',l:'งาน',t:'number'},{k:'area_wa',l:'ตร.วา',t:'number'},{k:'size_sqm',l:'พื้นที่ใช้สอย (ตร.ม.)',t:'number'},{k:'bedrooms',l:'ห้องนอน',t:'number'},
+    {k:'province',l:'จังหวัด'},{k:'district',l:'อำเภอ/เขต'},{k:'location',l:'ลิงก์แผนที่ / พิกัด',full:1},
+    {k:'price',l:'ราคาตั้งขาย (฿)',t:'number'},...(isAgent()?[{k:'appraisal',l:'ราคาประเมิน (฿)',t:'number'},{k:'cost',l:'ต้นทุน (ทรัพย์ของเรา) (฿)',t:'number'},{k:'ownerUser',l:'เจ้าของทรัพย์',t:'select',o:opts(usersBy('owner','buyer').filter(u=>!u.masked))},{k:'brokerUser',l:'นายหน้าผู้ดูแล',t:'select',o:opts(staffUsers()),dis:isBroker()}]:[]),
+    {k:'highlight',l:'จุดเด่น (แสดงให้ผู้ซื้อเห็น)',t:'textarea',full:1},...(isAgent()||owner?[{k:'note',l:'บันทึกภายใน',t:'textarea',full:1}]:[])];
+  if(ro){ // ผู้ซื้อ หรือทรัพย์ของคนอื่น: ดูอย่างเดียว
+    const files=D.Files.filter(f=>f.property===id);
+    return openView(esc(p.name),`<div class="thumbs">${files.map(f=>`<a href="${f.url}" target="_blank"><img src="${thumb(f)}" alt=""></a>`).join('')||'<span style="color:var(--muted);font-size:13px">ยังไม่มีรูป</span>'}</div>
+      <p style="margin-top:10px"><b>${fmtN(p.price)} ฿</b> · ${PTYPE[p.type]} · ${esc([p.district,p.province].filter(Boolean).join(' '))} · ${areaText(p)}</p><p style="color:var(--muted);white-space:pre-wrap">${esc(p.highlight||'')}</p>${p.location?`<p><a href="${esc(p.location)}" target="_blank">ดูแผนที่</a></p>`:''}
+      ${ME.role==='buyer'?`<div style="margin-top:12px"><button class="btn primary" onclick="closeModal();editViewing(null,'${id}')">ขอนัดชมทรัพย์นี้</button></div>`:`<p style="color:var(--muted);font-size:13px;margin-top:10px">ทรัพย์ของนายหน้ารายอื่น · ดูแลโดย ${esc(uName(p.brokerUser))}</p>`}`);
+  }
+  let linked='';
+  if(id){
+    const files=D.Files.filter(f=>f.property===id), ls=D.Listings.filter(l=>l.property===id), ks=D.Contracts.filter(c=>c.property===id), vs=D.Viewings.filter(v=>v.property===id), ds=D.Deals.filter(d=>d.property===id);
+    linked=`<div class="linked"><h4>รูปภาพและเอกสาร (${files.length})</h4><div class="thumbs">${files.map(f=>`<a href="${f.url}" target="_blank" title="${esc(f.name)}">${thumb(f)?`<img src="${thumb(f)}" alt="">`:esc(f.name)}${isAgent()?`<button type="button" onclick="event.preventDefault();act(this,()=>delRow('Files','${f.id}','ลบไฟล์แล้ว'),'…')">×</button>`:''}</a>`).join('')}</div>
+      <label class="btn sm" style="margin-top:8px">+ อัปโหลดรูป/เอกสาร <input type="file" multiple accept="image/*,.pdf" style="display:none" onchange="uploadFiles(this,'${id}')"></label>
+      ${isAgent()?shareBox(p):''}
+      ${isAgent()?`<h4>สัญญานายหน้า ${ls.map(l=>tag(LSTATUS,l.status)).join(' ')}</h4>${ls.map(l=>`<div class="li"><span>${LKIND[l.kind]?.split(' ')[0]||''} ค่าคอม ${l.commissionPct}% · หมด ${fmtD(l.due)}</span><button type="button" class="btn sm" onclick="closeModal();editListing('${l.id}')">เปิด</button></div>`).join('')}
+      <h4>ขายฝาก</h4>${ks.map(c=>`<div class="li"><span>${fmtN(c.amount)} ฿ · ${uName(c.seller)} · ครบ ${fmtD(c.due)}</span>${tag(CSTATUS,c.status)}</div>`).join('')||'<div class="li" style="color:var(--muted)">ไม่มี</div>'}
+      <h4>นัดชม (${vs.length}) · ดีล (${ds.length})</h4>${vs.slice(0,5).map(v=>`<div class="li"><span>${fmtD(v.date)} ${esc(uName(v.buyerUser))} · ${esc(v.feedback||'')}</span>${tag(VRESULT,v.result)}</div>`).join('')}${ds.map(d=>`<div class="li"><span>ดีล ${fmtN(d.price)} ฿ · ค่าคอม ${fmtN(d.commissionAmt)}</span>${tag(DSTATUS,d.status)}</div>`).join('')}
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn sm" onclick="closeModal();editListing(null,'${id}')">+ สัญญานายหน้า</button><button type="button" class="btn sm" onclick="closeModal();editCont(null,'${id}')">+ ขายฝาก</button><button type="button" class="btn sm" onclick="closeModal();editViewing(null,'${id}')">+ นัดชม</button><button type="button" class="btn sm" onclick="closeModal();editDeal(null,'${id}')">+ ดีล</button><button type="button" class="btn sm" onclick="closeModal();editTask(null,'${id}')">+ งาน</button></div>`
+      :`<h4>นัดชม</h4>${vs.map(v=>`<div class="li"><span>${fmtD(v.date)} ${v.time||''} · ${esc(v.feedback||'')}</span>${tag(VRESULT,v.result)}</div>`).join('')||'<div class="li" style="color:var(--muted)">ยังไม่มี</div>'}`}</div>`;
+  }
+  // ทรัพย์ใหม่ยังไม่มี id จึงยังอัปโหลดรูปไม่ได้ — บันทึกเสร็จเปิดหน้าเดิมซ้ำให้เลย ปุ่มอัปโหลดจะพร้อมใช้
+  openForm(id?'ข้อมูลทรัพย์':(owner?'ส่งทรัพย์ให้นายหน้า':'เพิ่มทรัพย์'),fields,p,linked,d=>{ if(!d.name) return toast('ใส่ชื่อทรัพย์ก่อน');
+    return saveRow('Properties',Object.assign({},p,d)).then(s=>{ if(!id&&s&&s.id){ editProp(s.id); toast('บันทึกแล้ว — เลื่อนลงล่างเพื่ออัปโหลดรูป'); } }); },(id&&isAgent())?()=>delRow('Properties',id,'ลบทรัพย์แล้ว'):null);
+  attachLocationPicker();
+}
+const IMG_MAX_PX=1600, IMG_QUALITY=0.82, IMG_PASS_BYTES=900*1024;
+// ย่อรูปในเบราว์เซอร์ก่อนส่ง — รูปจากมือถือรุ่นใหม่มักเกิน 8MB ถ้าไม่ย่อจะอัปไม่ได้เลย
+// คืน null = ไม่ต้องย่อ (ไม่ใช่รูป หรือเล็กอยู่แล้ว) ให้ผู้เรียกส่งไฟล์ต้นฉบับไป
+function shrinkImage(file){
+  return new Promise(res=>{
+    if(!/^image\/(jpeg|png|webp)$/i.test(file.type)) return res(null);
+    if(file.size<=IMG_PASS_BYTES) return res(null);
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      try{
+        const sc=Math.min(1,IMG_MAX_PX/Math.max(img.naturalWidth,img.naturalHeight));
+        const w=Math.round(img.naturalWidth*sc), h=Math.round(img.naturalHeight*sc);
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        const data=cv.toDataURL('image/jpeg',IMG_QUALITY).split(',')[1];
+        res(data&&data.length?{base64:data,mime:'image/jpeg',w:w,h:h}:null);
+      }catch(e){ res(null); }
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); res(null); };
+    img.src=url;
+  });
+}
+async function uploadFiles(inp,propertyId){
+  const files=[...inp.files]; if(!files.length) return;
+  if(inp.disabled) return;
+  inp.disabled=true;   // กันกดซ้ำระหว่างอัปโหลด (ปลดล็อกเองตอน editProp สร้างฟอร์มใหม่)
+  let n=0, shrunk=0;
+  for(let i=0;i<files.length;i++){
+    const f=files[i];
+    toast(`กำลังเตรียม ${i+1}/${files.length} · ${f.name}`);
+    const small=await shrinkImage(f);
+    if(!small&&f.size>8*1024*1024){ toast(f.name+' ใหญ่เกิน 8MB และย่อไม่ได้ (ไฟล์ไม่ใช่รูป)'); continue; }
+    let name=f.name, mime=f.type||'application/octet-stream', b64;
+    if(small){
+      b64=small.base64; mime='image/jpeg'; shrunk++;
+      name=f.name.replace(/\.[^.]+$/,'')+'.jpg';
+    }else{
+      b64=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result.split(',')[1]);fr.readAsDataURL(f);});
+    }
+    toast(`กำลังอัปโหลด ${i+1}/${files.length} · ${name}`);
+    try{ await call('uploadFile',{propertyId,name,mime,base64:b64}); n++; }catch(e){ toast(e.message); }
+  }
+  if(n) toast(`อัปโหลด ${n} ไฟล์เรียบร้อย`+(shrunk?` (ย่อรูปให้ ${shrunk} ไฟล์)`:''));
+  await reload(); editProp(propertyId);
+}
+
+/* ---------- listings (สัญญานายหน้า) ---------- */
+function rowListing(l){ const d=daysTo(l.due); return `<div class="row" onclick="editListing('${l.id}')"><div><div class="t">${esc(pName(l.property))}</div><div class="s">${(LKIND[l.kind]||'').split(' (')[0]} · เจ้าของ ${esc(uName(l.ownerUser))} · นายหน้า ${esc(uName(l.brokerUser))}</div></div><div class="right">ค่าคอม ${l.commissionPct}%<div class="s">หมด ${fmtD(l.due)} ${l.status==='active'?`<b style="color:${d<=14?'var(--red)':'inherit'}">(${d<0?'เกิน '+(-d):'อีก '+d} วัน)</b>`:''} ${tag(LSTATUS,l.status)}</div></div></div>`; }
+function vListing(){
+  head('สัญญาแต่งตั้งนายหน้า / ฝากขาย',`${D.Listings.filter(l=>l.status==='active').length} สัญญาที่ใช้งาน`,isAgent()?`<button class="btn primary" onclick="editListing()">+ ทำสัญญา</button>`:'');
+  const list=D.Listings.filter(l=>match(pName(l.property)+uName(l.ownerUser))&&(!filter.a||l.status===filter.a)).sort((a,b)=>a.due.localeCompare(b.due));
+  V().innerHTML=toolbar('ค้นหา…',{label:'ทุกสถานะ',map:LSTATUS})+`<div class="card"><div class="rows">${list.map(rowListing).join('')||empty('ยังไม่มีสัญญานายหน้า','')}</div></div>`;
+}
+function editListing(id,propId){
+  const l=id?byId(D.Listings,id):{property:propId||'',kind:'exclusive',commissionPct:3,start:today(),months:6,status:'active',brokerUser:ME.id};
+  const p=byId(D.Properties,l.property); if(!id&&p&&p.ownerUser) l.ownerUser=p.ownerUser;
+  const fields=[{k:'property',l:'ทรัพย์',t:'select',o:opts(D.Properties),full:1},{k:'ownerUser',l:'เจ้าของทรัพย์',t:'select',o:opts(usersBy('owner','buyer').filter(u=>!u.masked))},{k:'brokerUser',l:'นายหน้า',t:'select',o:opts(staffUsers()),dis:isBroker()},
+    {k:'kind',l:'ประเภทสัญญา',t:'select',o:LKIND},{k:'commissionPct',l:'ค่าคอมมิชชั่น (%)',t:'number'},{k:'start',l:'วันเริ่มสัญญา',t:'date'},{k:'months',l:'ระยะเวลา (เดือน)',t:'number'},{k:'status',l:'สถานะ',t:'select',o:selMap(LSTATUS)},{k:'note',l:'เงื่อนไข / บันทึก',t:'textarea',full:1}];
+  const calc=f=>{const E=f.elements;const pr=byId(D.Properties,E.property.value);const price=pr?Number(pr.price):0;return `<span>สัญญาหมดอายุ <b>${E.start.value?fmtD(addMonths(E.start.value,E.months.value||0)):'-'}</b></span><span>ค่าคอมโดยประมาณ <b>${fmtN(price*Number(E.commissionPct.value||0)/100)} ฿</b> (จากราคา ${fmtN(price)})</span>`;};
+  openForm(id?'สัญญานายหน้า':'ทำสัญญานายหน้า',fields,l,'',d=>{ if(!d.property) return toast('เลือกทรัพย์'); return saveRow('Listings',Object.assign({},l,d)); },id&&isAgent()?()=>delRow('Listings',id):null,isAgent()?calc:null,!isAgent());
+}
+
+/* ---------- contracts (ขายฝาก) ---------- */
+function rowCont(c){ const d=daysTo(c.due),act=['active','extended'].includes(c.status); return `<div class="row" onclick="editCont('${c.id}')"><div><div class="t">${esc(pName(c.property))}</div><div class="s">ผู้ขายฝาก ${esc(uName(c.seller))} · ${c.rate}% ต่อปี · ${c.months} เดือน · ครบ ${fmtD(c.due)}${act?` <b style="color:${d<=7?'var(--red)':d<=30?'var(--amber)':'inherit'}">(${d<0?'เกิน '+(-d):'อีก '+d} วัน)</b>`:''}</div></div><div class="right">${fmtN(c.amount)} ฿<div class="s">สินไถ่ ${fmtN(redemption(c))} · ${tag(CSTATUS,c.status)}</div></div></div>`; }
+function vCont(){
+  const act=D.Contracts.filter(c=>['active','extended'].includes(c.status));
+  head('ขายฝาก',`${act.length} สัญญา · เงินลงทุน ${fmtN(act.reduce((s,c)=>s+Number(c.amount),0))} ฿`,isAgent()?`<button class="btn primary" onclick="editCont()">+ ทำสัญญาใหม่</button>`:'');
+  const list=D.Contracts.filter(c=>match(pName(c.property)+uName(c.seller))&&(!filter.a||c.status===filter.a)).sort((a,b)=>a.due.localeCompare(b.due));
+  V().innerHTML=toolbar('ค้นหา…',{label:'ทุกสถานะ',map:CSTATUS})+`<div class="card"><div class="rows">${list.map(rowCont).join('')||empty('ยังไม่มีสัญญาขายฝาก','')}</div></div><p style="color:var(--muted);font-size:12.5px;margin-top:10px">กฎหมายขายฝากที่ดินเพื่อเกษตรกรรม/ที่อยู่อาศัย (พ.ร.บ. 2562): สินไถ่ไม่เกิน 15% ต่อปี ระยะเวลา 1–10 ปี ตรวจสอบกับสำนักงานที่ดินทุกครั้ง</p>`;
+}
+function editCont(id,propId){
+  const c=id?byId(D.Contracts,id):{property:propId||'',rate:15,months:12,start:today(),status:'active',payment:'monthly',brokerUser:ME.id};
+  const fields=[{k:'property',l:'ทรัพย์',t:'select',o:opts(D.Properties),full:1},{k:'seller',l:'ผู้ขายฝาก',t:'select',o:opts(usersBy('owner','buyer').filter(u=>!u.masked))},{k:'investor',l:'ผู้รับซื้อฝาก / นักลงทุน',t:'select',o:opts(D.Users.filter(u=>!u.masked))},
+    {k:'amount',l:'วงเงินขายฝาก (฿)',t:'number'},{k:'rate',l:'ผลตอบแทน (% ต่อปี)',t:'number'},{k:'months',l:'ระยะเวลา (เดือน)',t:'number'},{k:'start',l:'วันทำสัญญา',t:'date'},
+    {k:'payment',l:'การจ่ายผลตอบแทน',t:'select',o:{monthly:'รายเดือน',quarterly:'ราย 3 เดือน',lump:'จ่ายครั้งเดียวตอนไถ่'}},{k:'status',l:'สถานะ',t:'select',o:selMap(CSTATUS)},{k:'brokerUser',l:'ผู้ดูแล',t:'select',o:opts(staffUsers()),dis:isBroker()},{k:'note',l:'เงื่อนไข / บันทึก',t:'textarea',full:1}];
+  let linked='';
+  if(id&&isAgent()){ const tr=D.Transactions.filter(t=>t.contract===id), got=tr.filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount),0);
+    linked=`<div class="linked"><h4>ผลตอบแทนที่รับแล้ว ${fmtN(got)} ฿ (${tr.filter(t=>t.type==='income').length} ครั้ง)</h4>${tr.slice(0,5).map(t=>`<div class="li"><span>${fmtD(t.date)} ${TRCAT[t.cat]||''}</span><span class="${t.type}">${t.type==='income'?'+':'-'}${fmtN(t.amount)}</span></div>`).join('')}
+    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn sm" onclick="closeModal();editTr(null,'${c.property}','${id}')">+ บันทึกรับดอกผล</button><button type="button" class="btn sm" onclick="act(this,()=>extendCont('${id}'),'กำลังต่อสัญญา…')">ต่อสัญญา +12 เดือน</button></div></div>`; }
+  const calc=f=>{const E=f.elements,a=+E.amount.value||0,r=+E.rate.value||0,m=+E.months.value||0,t=a*(r/100)*(m/12);return `<span>ครบกำหนดไถ่ <b>${E.start.value?fmtD(addMonths(E.start.value,m)):'-'}</b></span><span>ผลตอบแทนรวม <b>${fmtN(t)} ฿</b> (≈ ${fmtN(m?t/m:0)}/เดือน)</span><span>สินไถ่ <b>${fmtN(a+t)} ฿</b></span>`;};
+  openForm(id?'สัญญาขายฝาก':'ทำสัญญาขายฝากใหม่',fields,c,linked,d=>{ if(!d.property) return toast('เลือกทรัพย์'); if(!Number(d.amount)) return toast('ใส่วงเงิน'); return saveRow('Contracts',Object.assign({},c,d)); },id&&isAgent()?()=>delRow('Contracts',id):null,calc,!isAgent());
+}
+function extendCont(id){ const c=byId(D.Contracts,id); return saveRow('Contracts',Object.assign({},c,{months:Number(c.months)+12,status:'extended'}),'ต่อสัญญาแล้ว'); }
+
+/* ---------- needs & matching ---------- */
+function needText(n){ const t=(n.types||[]).map(x=>PTYPE[x]).join('/')||'ทุกประเภท'; const pv=(n.provinces||[]).join(', ')||'ทุกจังหวัด'; return `${t} · ${pv} · งบ ${fmtN(n.minPrice)}–${fmtN(n.maxPrice)} ฿${Number(n.minRai)?' · ≥'+n.minRai+' ไร่':''}${Number(n.bedrooms)?' · ≥'+n.bedrooms+' นอน':''}`; }
+function vNeed(){ // buyer
+  head('ความต้องการของฉัน','บอกสิ่งที่ต้องการ ระบบจะจับคู่ทรัพย์ให้',`<button class="btn primary" onclick="editNeed()">+ เพิ่มความต้องการ</button>`);
+  V().innerHTML=`<div class="card"><div class="rows">${D.Needs.map(n=>`<div class="row" onclick="editNeed('${n.id}')"><div><div class="t">${esc(needText(n))}</div><div class="s">${esc(n.note||'')}</div></div><div class="right"><button class="btn sm" onclick="event.stopPropagation();showMatches('${n.id}')">ดูทรัพย์ที่ตรง</button></div></div>`).join('')||empty('ยังไม่ระบุความต้องการ','')}</div></div><div id="matchbox" style="margin-top:14px"></div>`;
+}
+function vMatch(){ // staff + broker
+  head(isBroker()?'ผู้ซื้อที่ตรงกับทรัพย์ของคุณ':'จับคู่ผู้ซื้อกับทรัพย์',isBroker()?'ระบบซ่อนข้อมูลติดต่อ กด “ขอให้ทีมงานติดต่อ” ทีมงานจะประสานให้':`${D.Needs.filter(n=>n.status!=='closed').length} ความต้องการที่เปิดอยู่`,isStaff()?`<button class="btn primary" onclick="editNeed()">+ บันทึกความต้องการผู้ซื้อ</button>`:'');
+  V().innerHTML=`<div class="card"><div class="rows">${D.Needs.filter(n=>n.status!=='closed').map(n=>`<div class="row" onclick="editNeed('${n.id}')"><div><div class="t">${esc(uName(n.buyerUser))}</div><div class="s">${esc(needText(n))}</div></div><div class="right"><button class="btn sm" onclick="event.stopPropagation();showMatches('${n.id}')">จับคู่</button></div></div>`).join('')||empty('ยังไม่มีความต้องการผู้ซื้อ','บันทึกจากการคุยกับลูกค้า แล้วกด “จับคู่”')}</div></div><div id="matchbox" style="margin-top:14px"></div>`;
+}
+async function showMatches(needId){
+  try{ const r=await call('match',{needId}); const m=r[0]?r[0].matches:[]; const n=r[0]?r[0].need:null;
+    document.getElementById('matchbox').innerHTML=`<div class="card"><h3>ทรัพย์ที่ตรงกับ${isStaff()&&n?' '+esc(uName(n.buyerUser)):'ความต้องการ'} (${m.length})</h3><div class="rows" style="margin-top:8px">${m.map(x=>`<div class="row" onclick="editProp('${x.property.id}')"><div><div class="t">${esc(x.property.name)}</div><div class="s">${PTYPE[x.property.type]} · ${esc(x.property.province||'')} · ${fmtN(x.property.price)} ฿</div></div><div class="right"><span class="score">${x.score}%</span>${isAgent()&&n?`<div class="s"><button class="btn sm" onclick="event.stopPropagation();${isBroker()?`act(this,()=>askContact('${n.buyerUser}','${x.property.id}'),'กำลังส่งคำขอ…')`:`editViewing(null,'${x.property.id}','${n.buyerUser}')`}">${isBroker()?'ขอให้ทีมงานติดต่อ':'นัดชม'}</button></div>`:''}</div></div>`).join('')||empty('ยังไม่มีทรัพย์ที่ตรง','ลองขยายงบหรือพื้นที่')}</div></div>`;
+    document.getElementById('matchbox').scrollIntoView({behavior:'smooth'});
+  }catch(e){ toast(e.message); }
+}
+function editNeed(id){
+  const n=id?byId(D.Needs,id):{buyerUser:ME.role==='buyer'?ME.id:'',types:[],provinces:[],status:'open'};
+  const fields=[...(isAgent()?[{k:'buyerUser',l:'ผู้ซื้อ',t:'select',o:opts(usersBy('buyer','owner')),full:1}]:[]),
+    {k:'types',l:'ประเภททรัพย์ (เลือกได้หลายอย่าง)',t:'multi',o:PTYPE},{k:'provinces',l:'จังหวัด (คั่นด้วยจุลภาค)',t:'csv'},
+    {k:'minPrice',l:'งบต่ำสุด (฿)',t:'number'},{k:'maxPrice',l:'งบสูงสุด (฿)',t:'number'},{k:'minRai',l:'เนื้อที่อย่างน้อย (ไร่)',t:'number'},{k:'minSqm',l:'พื้นที่ใช้สอยอย่างน้อย (ตร.ม.)',t:'number'},{k:'bedrooms',l:'ห้องนอนอย่างน้อย',t:'number'},
+    {k:'status',l:'สถานะ',t:'select',o:{open:'กำลังหา',closed:'ได้ทรัพย์แล้ว/ปิด'}},{k:'note',l:'รายละเอียดเพิ่มเติม',t:'textarea',full:1}];
+  openForm(id?'ความต้องการผู้ซื้อ':'บันทึกความต้องการ',fields,n,'',d=>{ if(isStaff()&&!d.buyerUser) return toast('เลือกผู้ซื้อ'); return saveRow('Needs',Object.assign({},n,d)); },id&&isStaff()?()=>delRow('Needs',id):null,null,isBroker());
+}
+
+/* ---------- viewings ---------- */
+function rowViewing(v){ return `<div class="row" onclick="editViewing('${v.id}')"><div><div class="t">${esc(pName(v.property))}</div><div class="s">${isAgent()?'ผู้ชม '+esc(uName(v.buyerUser))+' · ':''}นายหน้า ${esc(uName(v.brokerUser))}${v.feedback?' · '+esc(v.feedback):''}</div></div><div class="right">${fmtD(v.date)} ${v.time||''}<div class="s">${tag(VRESULT,v.result)}</div></div></div>`; }
+function vViewing(){
+  head('นัดชมทรัพย์',`${D.Viewings.filter(v=>v.date>=today()).length} นัดที่จะถึง`,isAgent()||ME.role==='buyer'?`<button class="btn primary" onclick="editViewing()">+ นัดชม</button>`:'');
+  const list=D.Viewings.filter(v=>match(pName(v.property)+uName(v.buyerUser))&&(!filter.a||v.result===filter.a)).sort((a,b)=>b.date.localeCompare(a.date));
+  V().innerHTML=toolbar('ค้นหา…',{label:'ทุกผล',map:VRESULT})+`<div class="card"><div class="rows">${list.map(rowViewing).join('')||empty('ยังไม่มีนัดชม','')}</div></div>`;
+}
+function editViewing(id,propId,buyerId){
+  const v=id?byId(D.Viewings,id):{property:propId||'',buyerUser:buyerId||(ME.role==='buyer'?ME.id:''),brokerUser:isAgent()?ME.id:'',date:today(),result:'pending'};
+  const buyer=ME.role==='buyer', own=buyer&&v.buyerUser===ME.id;
+  const fields= isAgent()?[{k:'property',l:'ทรัพย์',t:'select',o:opts(isBroker()?D.Properties.filter(p=>p.brokerUser===ME.id):D.Properties),full:1},{k:'buyerUser',l:'ผู้ชม',t:'select',o:opts(usersBy('buyer','owner'))},{k:'brokerUser',l:'นายหน้าที่พาชม',t:'select',o:opts(staffUsers()),dis:isBroker()},{k:'date',l:'วันที่',t:'date'},{k:'time',l:'เวลา',t:'time'},{k:'result',l:'ผล',t:'select',o:selMap(VRESULT)},{k:'feedback',l:'ความเห็นผู้ชม',t:'textarea',full:1},{k:'note',l:'บันทึกภายใน',t:'textarea',full:1}]
+    : buyer&&!id ? [{k:'property',l:'ทรัพย์',t:'select',o:opts(D.Properties),full:1},{k:'date',l:'วันที่สะดวก',t:'date'},{k:'time',l:'เวลา',t:'time'},{k:'feedback',l:'ข้อความถึงนายหน้า',t:'textarea',full:1}]
+    : [{k:'result',l:'ความรู้สึกหลังชม',t:'select',o:selMap(VRESULT)},{k:'feedback',l:'ความเห็น',t:'textarea',full:1}];
+  const bu=byId(D.Users,v.buyerUser);
+  const info=id&&!isAgent()?`<div class="linked"><b>${esc(pName(v.property))}</b> · ${fmtD(v.date)} ${v.time||''} · นายหน้า ${esc(uName(v.brokerUser))}</div>`
+    : (id&&isBroker()&&bu&&bu.masked?`<div class="linked" style="font-size:13.5px">ผู้ชมรายนี้ติดต่อผ่านทีมงาน <button type="button" class="btn sm" onclick="act(this,()=>askContact('${bu.id}','${v.property}'),'กำลังส่งคำขอ…')">ขอให้ทีมงานติดต่อ</button></div>`:'');
+  openForm(id?'นัดชมทรัพย์':'นัดชมทรัพย์ใหม่',fields,v,info,d=>{ if(!id&&!d.property) return toast('เลือกทรัพย์'); return saveRow('Viewings',Object.assign({},v,d)); },id&&isAgent()?()=>delRow('Viewings',id):null,null,ME.role==='owner');
+}
+
+/* ---------- deals & commission split ---------- */
+function vDeal(){
+  head('ดีลและค่าคอมมิชชั่น',`ค่าคอมรอรับ ${fmtN(D.Deals.filter(d=>d.status!=='cancelled'&&!d.posted).reduce((s,d)=>s+Number(d.commissionAmt),0))} ฿`,`<button class="btn primary" onclick="editDeal()">+ เปิดดีล</button>`);
+  const list=D.Deals.filter(d=>match(pName(d.property)+uName(d.buyerUser))&&(!filter.a||d.status===filter.a)).sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
+  V().innerHTML=toolbar('ค้นหา…',{label:'ทุกสถานะ',map:DSTATUS})+`<div class="card"><div class="rows">${list.map(d=>`<div class="row" onclick="editDeal('${d.id}')"><div><div class="t">${esc(pName(d.property))}</div><div class="s">ผู้ซื้อ ${esc(uName(d.buyerUser))} · ${(d.splits||[]).map(s=>`${esc(s.name||uName(s.user))} ${s.pct}%`).join(' / ')||'ยังไม่แบ่ง'}</div></div><div class="right">${fmtN(d.price)} ฿<div class="s">ค่าคอม ${fmtN(d.commissionAmt)} (${d.commissionPct}%) ${tag(DSTATUS,d.status)}${d.posted?' <span class="tag ink">ลงบัญชีแล้ว</span>':''}</div></div></div>`).join('')||empty('ยังไม่มีดีล','')}</div></div>`;
+}
+function editDeal(id,propId){
+  const d=id?byId(D.Deals,id):{property:propId||'',status:'negotiating',commissionPct:3,closeDate:today(),splits:[{user:ME.id,name:'',pct:100}]};
+  const p=byId(D.Properties,d.property); if(!id&&p){ d.price=p.price; const l=D.Listings.find(x=>x.property===p.id&&x.status==='active'); if(l) d.commissionPct=l.commissionPct; }
+  const fields=[{k:'property',l:'ทรัพย์',t:'select',o:opts(isBroker()?D.Properties.filter(x=>x.brokerUser===ME.id):D.Properties),full:1},{k:'buyerUser',l:'ผู้ซื้อ',t:'select',o:opts(usersBy('buyer','owner'))},{k:'status',l:'สถานะ',t:'select',o:selMap(DSTATUS)},{k:'price',l:'ราคาซื้อขายจริง (฿)',t:'number'},{k:'commissionPct',l:'ค่าคอมรวม (%)',t:'number'},{k:'closeDate',l:'วันโอน/ปิดดีล',t:'date'},{k:'note',l:'บันทึก',t:'textarea',full:1}];
+  const splitRow=(s={})=>`<div class="split"><select class="sp_user"><option value="">— Co-agent ภายนอก —</option>${staffUsers().map(u=>`<option value="${u.id}" ${s.user===u.id?'selected':''}>${esc(u.name)}</option>`).join('')}</select><input class="sp_name" placeholder="ชื่อ (ถ้าเป็นคนนอก)" value="${esc(s.name||'')}"><input class="sp_pct" type="number" inputmode="decimal" placeholder="%" value="${s.pct??''}"><button type="button" class="btn sm" onclick="this.parentNode.remove();updSplit()">×</button></div>`;
+  const linked=`<div class="linked"><h4>แบ่งค่าคอมมิชชั่น (รวมต้องได้ 100%)</h4><div id="splits">${(d.splits||[]).map(splitRow).join('')}</div><button type="button" class="btn sm" onclick="document.getElementById('splits').insertAdjacentHTML('beforeend',SPLITROW);updSplit()">+ เพิ่มผู้ร่วม / Co-agent</button><div id="splitsum" style="margin-top:8px;font-size:14px"></div>
+    ${id&&d.status==='closed'&&!d.posted&&isStaff()?`<div style="margin-top:10px"><button type="button" class="btn sm primary" onclick="act(this,()=>postDeal('${id}'),'กำลังลงบัญชี…')">ลงบัญชีค่าคอมเป็นรายรับ</button></div>`:''}</div>`;
+  window.SPLITROW=splitRow();
+  const readSplits=()=>[...document.querySelectorAll('#splits .split')].map(r=>({user:r.querySelector('.sp_user').value,name:r.querySelector('.sp_name').value.trim(),pct:Number(r.querySelector('.sp_pct').value)||0}));
+  window.updSplit=()=>{ const E=document.getElementById('frm').elements; const amt=Number(E.price.value)*Number(E.commissionPct.value)/100; const sp=readSplits(); const sum=sp.reduce((s,x)=>s+x.pct,0); document.getElementById('splitsum').innerHTML=`ค่าคอมรวม <b>${fmtN(amt)} ฿</b> · ${sp.map(x=>`${esc(x.name||uName(x.user))} ${fmtN(amt*x.pct/100)}`).join(' / ')} · <b style="color:${Math.abs(sum-100)<0.01?'var(--green)':'var(--red)'}">รวม ${sum}%</b>`; };
+  openForm(id?'ดีล':'เปิดดีล',fields,d,linked,dd=>{ if(!dd.property) return toast('เลือกทรัพย์'); return saveRow('Deals',Object.assign({},d,dd,{splits:readSplits()})); },id&&isStaff()?()=>delRow('Deals',id):null,()=>{updSplit();return '';});
+  document.getElementById('splits').addEventListener('input',updSplit); updSplit();
+}
+async function postDeal(id){ try{ await call('postDealIncome',{id}); closeModal(); await reload(); toast('ลงบัญชีค่าคอมแล้ว'); }catch(e){ toast(e.message); } }
+
+/* ---------- customers / users ---------- */
+function rowUser(u,admin){ return `<div class="row" onclick="editUser('${u.id}')"><div><div class="t">${esc(u.name)}</div><div class="s">${ROLE[u.role]||''}${u.masked?' · <span class="tag gold">ติดต่อผ่านทีมงาน</span>':` · ${esc(u.phone||'')}${u.line?' · LINE '+esc(u.line):''}${u.email?' · '+esc(u.email):''}`}</div></div><div class="right"><div class="s">${u.masked?'':tag(USTATUS,u.status)}</div>${admin&&canManage(u)&&u.status==='pending'?`<div class="s" style="margin-top:4px"><button class="btn sm primary" onclick="event.stopPropagation();approveUser('${u.id}')">อนุมัติ</button></div>`:''}</div></div>`; }
+function vCust(){
+  head('ลูกค้า',isBroker()?'ผู้ติดต่อที่คุณเพิ่มเอง · ลูกค้าจากระบบจะแสดงเป็นรหัสและติดต่อผ่านทีมงาน':`เจ้าของทรัพย์และผู้ซื้อ ${usersBy('owner','buyer').length} ราย`,`<button class="btn primary" onclick="editUser()">+ เพิ่มผู้ติดต่อ</button>`);
+  const list=usersBy('owner','buyer').filter(u=>match(u.name+u.phone+u.line+u.email+u.note)&&(!filter.a||u.role===filter.a));
+  V().innerHTML=toolbar('ค้นหาชื่อ เบอร์ อีเมล…',{label:'ทุกประเภท',map:{owner:ROLE.owner,buyer:ROLE.buyer}})+`<div class="card"><div class="rows">${list.map(u=>rowUser(u,false)).join('')||empty('ไม่พบลูกค้า','')}</div></div>`;
+}
+function vUsers(){
+  head('ผู้ใช้และสิทธิ์',`รออนุมัติ ${D.Users.filter(u=>u.status==='pending').length} · ทั้งหมด ${D.Users.length}`,`<button class="btn primary" onclick="editUser()">+ เพิ่มผู้ใช้</button>`);
+  const list=D.Users.filter(u=>match(u.name+u.email+u.phone)&&(!filter.a||u.role===filter.a)&&(!filter.b||u.status===filter.b)).sort((a,b)=>(a.status==='pending'?0:1)-(b.status==='pending'?0:1));
+  V().innerHTML=toolbar('ค้นหา…',{label:'ทุกบทบาท',map:ROLE},{label:'ทุกสถานะ',map:USTATUS})+`<div class="card"><div class="rows">${list.map(u=>rowUser(u,true)).join('')}</div></div>`;
+}
+async function setUser(id,p){ try{ await call('setUser',Object.assign({id},p)); await reload(); toast('อัปเดตผู้ใช้แล้ว'); }catch(e){ toast(e.message); } }
+// อนุมัติ + กำหนดบทบาทในขั้นตอนเดียว กันลืมว่าผู้สมัครเลือกบทบาทเองมา
+function approveUser(id){
+  const u=byId(D.Users,id); if(!u) return;
+  if(!canManage(u)) return toast('บัญชีทีมงาน/ผู้ดูแลระบบ ต้องให้ผู้ดูแลระบบเป็นคนจัดการ');
+  const roles=ME.role==='admin'?ROLE:STAFF_ROLES;
+  const contact=[u.phone,u.email,u.line?'LINE '+u.line:''].filter(Boolean).map(esc).join(' · ')||'ไม่ได้กรอกข้อมูลติดต่อ';
+  openView('อนุมัติผู้ใช้',`<p><b>${esc(u.name)}</b></p><p style="color:var(--muted);font-size:13.5px">${contact}</p>
+    <p style="font-size:13.5px;margin-top:10px">ผู้สมัคร <b>เลือกเอง</b> ว่าเป็น <b>${ROLE[u.role]||'-'}</b> — ยืนยันหรือเปลี่ยนบทบาทก่อนอนุมัติ</p>
+    <div class="f" style="margin:12px 0"><label>ให้สิทธิ์เป็น</label><select id="ap_role">${Object.entries(roles).map(([k,l])=>`<option value="${k}" ${u.role===k?'selected':''}>${l}</option>`).join('')}</select></div>
+    <p style="color:var(--muted);font-size:12.5px">นายหน้าภายนอก = เห็นเฉพาะทรัพย์ที่ตนนำมาลง ลูกค้าจากระบบจะถูกซ่อนเบอร์และอีเมล${ME.role==='admin'?' · ทีมงาน = เห็นทุกทรัพย์ ทุกสัญญา และข้อมูลติดต่อลูกค้าทั้งหมด':' · ถ้าต้องการตั้งเป็นทีมงานหรือผู้ดูแลระบบ ต้องให้ผู้ดูแลระบบเป็นคนตั้ง'}</p>
+    <div class="mact"><button type="button" class="btn danger" onclick="act(this,()=>setUser('${id}',{status:'blocked'}).then(closeModal),'กำลังระงับ…')">ปฏิเสธ (ระงับบัญชี)</button><span style="display:flex;gap:8px"><button type="button" class="btn" onclick="closeModal()">ยกเลิก</button><button type="button" class="btn primary" onclick="act(this,()=>setUser('${id}',{status:'active',role:document.getElementById('ap_role').value}).then(closeModal),'กำลังอนุมัติ…')">อนุมัติ</button></span></div>`);
+}
+function editUser(id){
+  const u=id?byId(D.Users,id):{role:'owner',status:'contact'}, admin=ME.role==='admin', mng=id?canManage(u):isStaff();
+  if(u.masked) return openView(esc(u.name),`<p>${ROLE[u.role]||''} · ข้อมูลติดต่ออยู่กับทีมงาน</p><p style="color:var(--muted);font-size:13.5px;margin:6px 0 12px">ส่งคำขอแล้วทีมงานจะติดต่อลูกค้าและประสานกลับให้คุณ</p><button class="btn primary" onclick="act(this,()=>{closeModal();return askContact('${u.id}','');},'กำลังส่งคำขอ…')">ขอให้ทีมงานติดต่อ</button>`);
+  const fields=[{k:'name',l:'ชื่อ-นามสกุล',full:1},{k:'email',l:'อีเมล (ใช้ล็อกอิน)',t:'email'},{k:'phone',l:'โทรศัพท์',t:'tel'},{k:'line',l:'LINE ID'},
+    {k:'role',l:'บทบาท',t:'select',o:admin?ROLE:(isStaff()?STAFF_ROLES:{owner:ROLE.owner,buyer:ROLE.buyer}),dis:!admin&&!!id&&!mng},...(admin||mng?[{k:'status',l:'สถานะบัญชี',t:'select',o:selMap(USTATUS)}]:[]),{k:'note',l:'บันทึก / ความต้องการ',t:'textarea',full:1}];
+  let linked='';
+  if(id){ const ps=D.Properties.filter(p=>p.ownerUser===id), vs=D.Viewings.filter(v=>v.buyerUser===id), ns=D.Needs.filter(n=>n.buyerUser===id);
+    linked=`<div class="linked"><h4>ทรัพย์ ${ps.length} · นัดชม ${vs.length} · ความต้องการ ${ns.length}</h4>${ps.map(p=>`<div class="li"><span>${esc(p.name)}</span>${tag(PSTATUS,p.status)}</div>`).join('')}${ns.map(n=>`<div class="li"><span>${esc(needText(n))}</span><button type="button" class="btn sm" onclick="closeModal();go('match');showMatches('${n.id}')">จับคู่</button></div>`).join('')}
+    <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${u.phone?`<a class="btn sm" href="tel:${esc(u.phone)}">โทร</a>`:''}<button type="button" class="btn sm" onclick="closeModal();editViewing(null,'','${id}')">+ นัดชม</button><button type="button" class="btn sm" onclick="closeModal();editTask(null,'','${id}')">+ งาน</button>
+    ${mng&&u.status!=='contact'?`<button type="button" class="btn sm" onclick="act(this,()=>resetPin('${id}'),'กำลังรีเซ็ต…')">รีเซ็ต PIN</button>`:''}${mng&&u.status==='pending'?`<button type="button" class="btn sm primary" onclick="closeModal();approveUser('${id}')">อนุมัติบัญชี</button>`:''}</div></div>`; }
+  openForm(id?'ข้อมูลผู้ใช้':'เพิ่มผู้ติดต่อ',fields,u,linked,d=>{ if(!d.name) return toast('ใส่ชื่อ'); return saveRow('Users',Object.assign({},u,d)); },id&&admin?()=>delRow('Users',id):null);
+}
+async function askContact(userId,propertyId){ const m=prompt('ข้อความถึงทีมงาน (เช่น ต้องการนัดชม/เสนอราคา)')||''; try{ await call('requestContact',{userId,propertyId,message:m}); toast('ส่งคำขอถึงทีมงานแล้ว'); }catch(e){ toast(e.message); } }
+async function resetPin(id){ const pin=prompt('PIN ใหม่ (ตัวเลข 4–8 หลัก)'); if(!pin) return; await setUser(id,{pin}); }
+
+/* ---------- tasks ---------- */
+function rowTask(t){ const late=!t.done&&t.date<today(); return `<div class="row" onclick="editTask('${t.id}')"><div><div class="t" style="${t.done?'text-decoration:line-through;color:var(--muted)':''}">${esc(t.title)}</div><div class="s">${TTYPE[t.type]||''}${t.property?' · '+esc(pName(t.property)):''}${t.person?' · '+esc(uName(t.person)):''} · ${esc(uName(t.assignee))}</div></div><div class="right" style="color:${late?'var(--red)':'inherit'}">${fmtD(t.date)}<div class="s">${t.time||''} <button class="btn sm" onclick="event.stopPropagation();act(this,()=>toggleTask('${t.id}'),'…')">${t.done?'ยังไม่เสร็จ':'เสร็จแล้ว'}</button></div></div></div>`; }
+function vTask(){
+  head('งานและนัดหมาย',`${D.Tasks.filter(t=>!t.done).length} งานที่ยังไม่เสร็จ`,`<button class="btn primary" onclick="editTask()">+ เพิ่มงาน</button>`);
+  const list=D.Tasks.filter(t=>match(t.title+pName(t.property))&&(!filter.a||t.type===filter.a)&&(filter.b==='mine'?t.assignee===ME.id:filter.b==='done'?t.done:filter.b==='open'?!t.done:true)).sort((a,b)=>(a.done-b.done)||a.date.localeCompare(b.date));
+  V().innerHTML=toolbar('ค้นหางาน…',{label:'ทุกประเภท',map:TTYPE},{label:'ทั้งหมด',map:{mine:'ของฉัน',open:'ยังไม่เสร็จ',done:'เสร็จแล้ว'}})+`<div class="card"><div class="rows">${list.map(rowTask).join('')||empty('ไม่มีงาน','')}</div></div>`;
+}
+function toggleTask(id){ const t=byId(D.Tasks,id); return saveRow('Tasks',Object.assign({},t,{done:!t.done}),t.done?'เปิดงานใหม่':'ทำเสร็จแล้ว'); }
+function editTask(id,propId,personId){
+  const t=id?byId(D.Tasks,id):{type:'viewing',date:today(),property:propId||'',person:personId||'',assignee:ME.id,done:false};
+  const fields=[{k:'title',l:'ชื่องาน',full:1},{k:'type',l:'ประเภท',t:'select',o:TTYPE},{k:'assignee',l:'ผู้รับผิดชอบ',t:'select',o:opts(staffUsers()),dis:isBroker()},{k:'date',l:'วันที่',t:'date'},{k:'time',l:'เวลา',t:'time'},{k:'property',l:'ทรัพย์',t:'select',o:opts(D.Properties)},{k:'person',l:'ลูกค้า',t:'select',o:opts(D.Users)},{k:'done',l:'สถานะ',t:'select',o:{false:'ยังไม่เสร็จ',true:'เสร็จแล้ว'}},{k:'note',l:'รายละเอียด',t:'textarea',full:1}];
+  openForm(id?'แก้ไขงาน':'เพิ่มงาน',fields,Object.assign({},t,{done:String(t.done)}),'',d=>{ if(!d.title) return toast('ใส่ชื่องาน'); d.done=d.done==='true'; return saveRow('Tasks',Object.assign({},t,d)); },id?()=>delRow('Tasks',id):null);
+}
+
+/* ---------- finance ---------- */
+function vFin(){
+  const ym=today().slice(0,7);
+  const list=D.Transactions.filter(t=>match(t.note+pName(t.property)+(TRCAT[t.cat]||''))&&(!filter.a||t.cat===filter.a)&&(!filter.b||t.type===filter.b)).sort((a,b)=>b.date.localeCompare(a.date));
+  const sum=(arr,f)=>arr.filter(f).reduce((s,t)=>s+Number(t.amount),0);
+  head('การเงิน',isBroker()?'ค่าคอมที่ทีมงานลงบัญชีให้คุณ':`รายรับเดือนนี้ ${fmtN(sum(D.Transactions,t=>t.type==='income'&&t.date.startsWith(ym)))} ฿`,isStaff()?`<button class="btn primary" onclick="editTr()">+ บันทึกรายการ</button>`:'');
+  V().innerHTML=`<div class="stats"><div class="stat"><div class="l">ค่าคอมมิชชั่นสะสม</div><div class="v">${fmtN(sum(D.Transactions,t=>t.cat==='commission'))} <small>฿</small></div></div><div class="stat"><div class="l">ผลตอบแทนขายฝากสะสม</div><div class="v">${fmtN(sum(D.Transactions,t=>t.cat==='interest'))} <small>฿</small></div></div><div class="stat"><div class="l">รายรับ (ตามตัวกรอง)</div><div class="v income">${fmtN(sum(list,t=>t.type==='income'))}</div></div><div class="stat"><div class="l">รายจ่าย (ตามตัวกรอง)</div><div class="v expense">${fmtN(sum(list,t=>t.type==='expense'))}</div></div></div>`
+  + toolbar('ค้นหา…',{label:'ทุกหมวด',map:TRCAT},{label:'รับ/จ่าย',map:{income:'รายรับ',expense:'รายจ่าย'}})
+  + `<div class="card" style="overflow:auto"><table><thead><tr><th>วันที่</th><th>หมวด</th><th>ทรัพย์ / บันทึก</th><th>ของ</th><th class="num">จำนวน (฿)</th></tr></thead><tbody>${list.map(t=>`<tr class="click" onclick="editTr('${t.id}')"><td>${fmtD(t.date)}</td><td>${TRCAT[t.cat]||''}</td><td>${t.property?esc(pName(t.property)):''}${t.note?`<div style="color:var(--muted);font-size:13px">${esc(t.note)}</div>`:''}</td><td>${esc(uName(t.user))}</td><td class="num ${t.type}">${t.type==='income'?'+':'-'}${fmtN(t.amount)}</td></tr>`).join('')||`<tr><td colspan="5">${empty('ยังไม่มีรายการ','')}</td></tr>`}</tbody></table></div>`;
+}
+function editTr(id,propId,contId){
+  if(!isStaff()) return;
+  const t=id?byId(D.Transactions,id):{date:today(),type:'income',cat:contId?'interest':'commission',property:propId||'',contract:contId||'',user:ME.id};
+  const fields=[{k:'type',l:'ประเภท',t:'select',o:{income:'รายรับ',expense:'รายจ่าย'}},{k:'cat',l:'หมวด',t:'select',o:TRCAT},{k:'amount',l:'จำนวน (฿)',t:'number'},{k:'date',l:'วันที่',t:'date'},{k:'property',l:'ทรัพย์',t:'select',o:opts(D.Properties)},{k:'contract',l:'สัญญาขายฝาก',t:'select',o:Object.fromEntries(D.Contracts.map(c=>[c.id,`${pName(c.property)} · ${fmtN(c.amount)}`]))},{k:'user',l:'ของ (นายหน้า)',t:'select',o:opts(staffUsers())},{k:'note',l:'บันทึก',t:'textarea',full:1}];
+  openForm(id?'แก้ไขรายการ':'บันทึกรายรับ-รายจ่าย',fields,t,'',d=>{ if(!Number(d.amount)) return toast('ใส่จำนวนเงิน'); return saveRow('Transactions',Object.assign({},t,d)); },id?()=>delRow('Transactions',id):null);
+}
+
+/* ---------- settings ---------- */
+function vSet(){
+  head('ตั้งค่า',ME.email,'');
+  V().innerHTML=`<div class="card" style="padding:16px"><p><b>${esc(ME.name)}</b> · ${ROLE[ME.role]}</p><p style="color:var(--muted);font-size:13.5px;margin-bottom:12px">${isStaff()?'ข้อมูลทั้งหมดเก็บใน Google Sheets ที่ผูกกับระบบ เปิดดู/ส่งออกได้จากชีตโดยตรง':isBroker()?'คุณเห็นและจัดการได้เฉพาะทรัพย์ที่คุณนำมาลง ข้อมูลติดต่อลูกค้าจากระบบจะผ่านทีมงานเสมอ':'ติดต่อนายหน้าผู้ดูแลได้จากรายการทรัพย์'}</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">${BOOT.lineChannelId&&!BOOT.mini?(ME.lineId?'<span class="btn" style="cursor:default">✓ เชื่อมต่อ LINE แล้ว</span>':`<a class="btn line" target="_top" href="${lineUrl('link:'+TOKEN)}">${LINE_SVG} เชื่อมต่อบัญชี LINE</a>`):''}<button class="btn" onclick="act(this,()=>changePin(),'กำลังเปลี่ยน PIN…')">${ME.email?'เปลี่ยน PIN':'ตั้ง PIN สำรอง'}</button><button class="btn" onclick="act(this,async()=>{await reload();toast('โหลดข้อมูลใหม่แล้ว');},'กำลังโหลด…')">โหลดข้อมูลใหม่</button><button class="btn danger" onclick="act(this,()=>logout(),'กำลังออก…')">ออกจากระบบ</button></div>
+  <p style="color:var(--muted);font-size:12px;margin-top:12px">เวอร์ชันระบบ ${esc(BOOT.version||'-')}</p></div>`+(isAgent()?leadLinkCard():'');
+  if(isAgent()) leadLink();
+}
+/* ---------- ลิงก์รับลีด + QR สำหรับติดป้าย/ใบปลิว ---------- */
+function leadLinkCard(){
+  return `<div class="card" style="padding:16px;margin-top:14px"><h3 style="padding:0">ลิงก์รับลีด + QR code</h3>
+    <p class="sub" style="padding:0;margin-bottom:10px">ติดป้ายหน้าทรัพย์ ใบปลิว หรือนามบัตร ลูกค้าสแกนแล้วกรอกชื่อ-เบอร์ ระบบจะสร้างงานโทรกลับให้ทันที</p>
+    <div class="form" style="grid-template-columns:1fr 1fr">
+      <div class="f"><label>แหล่งที่มา (ใช้แยกว่าลีดมาจากไหน)</label><input id="lk_src" value="ป้ายหน้าทรัพย์" oninput="leadLink()"></div>
+      <div class="f"><label>เจาะจงทรัพย์ (ไม่บังคับ)</label><select id="lk_prop" onchange="leadLink()"><option value="">- ฟอร์มทั่วไป -</option>${D.Properties.filter(p=>['available','reserved'].includes(p.status)).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></div>
+      <div class="f full"><label>ลิงก์</label><input id="lk_url" readonly onclick="this.select()"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">
+      <button class="btn" onclick="leadCopy(this)">คัดลอกลิงก์</button>
+      <a class="btn" id="lk_open" target="_blank" href="#">เปิดดูฟอร์ม</a>
+      <img id="lk_qr" alt="QR" width="150" height="150" style="border:1px solid var(--line);border-radius:8px;background:#fff" onerror="this.style.display='none';document.getElementById('lk_qrnote').hidden=false">
+      <span id="lk_qrnote" hidden style="font-size:12.5px;color:var(--muted);max-width:220px">แสดง QR บนหน้าจอไม่ได้ ใช้ไฟล์โปสเตอร์ในโฟลเดอร์ qr/ สำหรับพิมพ์แทน</span>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:10px">QR บนหน้าจอนี้สร้างโดยบริการภายนอก (api.qrserver.com) ไว้ดูเร็วๆ เท่านั้น · สำหรับพิมพ์จริงใช้ไฟล์ความละเอียดสูงที่สร้างจากสคริปต์ make-qr.ps1</p></div>`;
+}
+function leadUrl(){
+  const src=document.getElementById('lk_src').value.trim(), pid=document.getElementById('lk_prop').value;
+  return BOOT.appUrl+'?form=lead'+(src?'&src='+encodeURIComponent(src):'')+(pid?'&p='+encodeURIComponent(pid):'');
+}
+function leadLink(){
+  const u=leadUrl();
+  document.getElementById('lk_url').value=u;
+  document.getElementById('lk_open').href=u;
+  const q=document.getElementById('lk_qr');
+  q.style.display=''; document.getElementById('lk_qrnote').hidden=true;
+  q.src='https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data='+encodeURIComponent(u);
+}
+function leadCopy(btn){
+  const el=document.getElementById('lk_url'); el.select();
+  try{ navigator.clipboard.writeText(el.value); toast('คัดลอกลิงก์แล้ว'); }
+  catch(e){ try{ document.execCommand('copy'); toast('คัดลอกลิงก์แล้ว'); }catch(x){ toast('กดค้างที่ช่องลิงก์เพื่อคัดลอก'); } }
+}
+async function changePin(){ const o=prompt('PIN เดิม'); if(!o) return; const n=prompt('PIN ใหม่ (ตัวเลข 4–8 หลัก)'); if(!n) return; try{ await call('changePin',{oldPin:o,newPin:n}); toast('เปลี่ยน PIN แล้ว'); }catch(e){ toast(e.message); } }
+
+/* ---------- generic modal ---------- */
+function openView(title,html){ document.getElementById('modal').innerHTML=`<h2>${title}<button type="button" onclick="closeModal()" aria-label="ปิด">×</button></h2>${html}`; document.getElementById('overlay').classList.add('open'); }
+function openForm(title,fields,data,linked,onSave,onDelete,calc,readonly){
+  const html=fields.map(f=>{ const v=data[f.k]??''; let inp; const dis=(readonly||f.dis)?'disabled':'';
+    if(f.t==='select') inp=`<select name="${f.k}" ${dis}><option value="">- เลือก -</option>${Object.entries(f.o).map(([k,l])=>`<option value="${esc(k)}" ${String(v)===String(k)?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
+    else if(f.t==='multi') inp=`<select name="${f.k}" multiple size="3" ${dis}>${Object.entries(f.o).map(([k,l])=>`<option value="${esc(k)}" ${(v||[]).includes(k)?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
+    else if(f.t==='csv') inp=`<input name="${f.k}" value="${esc((v||[]).join(', '))}" ${dis}>`;
+    else if(f.t==='textarea') inp=`<textarea name="${f.k}" ${dis}>${esc(v)}</textarea>`;
+    else inp=`<input name="${f.k}" type="${f.t||'text'}" value="${esc(v)}" ${f.t==='number'?'inputmode="decimal" step="any"':''} ${dis}>`;
+    return `<div class="f ${f.full?'full':''}"><label>${f.l}</label>${inp}</div>`; }).join('');
+  document.getElementById('modal').innerHTML=`<h2>${title}<button type="button" onclick="closeModal()" aria-label="ปิด">×</button></h2><form class="form" id="frm" onsubmit="return false">${html}${calc?'<div class="calc" id="calc"></div>':''}${linked||''}
+    <div class="mact">${onDelete?'<button type="button" class="btn danger" id="del">ลบ</button>':'<span></span>'}<span style="display:flex;gap:8px"><button type="button" class="btn" onclick="closeModal()">${readonly?'ปิด':'ยกเลิก'}</button>${readonly?'':'<button type="button" class="btn primary" id="sv">บันทึก</button>'}</span></div></form>`;
+  const frm=document.getElementById('frm');
+  if(!readonly){
+    const sv=document.getElementById('sv');
+    // ล็อกปุ่มระหว่างบันทึก กันกดซ้ำแล้วได้รายการซ้ำ (เซิร์ฟเวอร์จะสร้าง id ใหม่ทุกครั้งที่ยังไม่มี id)
+    sv.onclick=async()=>{
+      if(sv.disabled) return;
+      const d={}; fields.forEach(f=>{ const el=frm.elements[f.k]; if(!el) return; if(f.t==='number') d[f.k]=el.value===''?0:Number(el.value); else if(f.t==='multi') d[f.k]=[...el.selectedOptions].map(o=>o.value); else if(f.t==='csv') d[f.k]=el.value.split(/[,、]/).map(s=>s.trim()).filter(Boolean); else d[f.k]=el.value; });
+      await act(sv,()=>onSave(d),'กำลังบันทึก…');
+    };
+  }
+  if(onDelete){ const dl=document.getElementById('del'); dl.onclick=()=>act(dl,()=>onDelete(),'กำลังลบ…'); }
+  if(calc){ const upd=()=>{const c=document.getElementById('calc'); const out=calc(frm); if(out==='') c.style.display='none'; else c.innerHTML=out;}; frm.addEventListener('input',upd); upd(); }
+  document.getElementById('overlay').classList.add('open');
+  const first=frm.querySelector('input:not([disabled]),select:not([disabled])'); if(first&&window.innerWidth>860) first.focus();
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(document.getElementById('pinpick')) closePinPicker(); else closeModal(); } });
+let toastT; function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3000); }
+
+/* ---------- start ---------- */
+// LINE MINI App: อ่านพารามิเตอร์จาก URL เอง ขอข้อมูลเริ่มต้นผ่าน API แล้วเข้าระบบด้วยบัญชี LINE ที่เปิดแอปอยู่ ไม่มีหน้า login
+async function miniStart(){
+  const box=document.getElementById('authbox');
+  box.innerHTML='<h1>กำลังเปิดระบบ…</h1><p>รอสักครู่</p>';
+  const read=()=>{ const q=new URLSearchParams(location.search); BOOT.form=q.get('form')||''; BOOT.src=q.get('src')||''; BOOT.view=q.get('v')||''; BOOT.intent=q.get('intent')||''; BOOT.pid=BOOT.form?'':(q.get('p')||''); return q; };
+  let q=read();
+  const hasLiff=!!(BOOT.liffId&&window.liff);
+  // ลิงก์ liff.line.me ส่งพารามิเตอร์มาใน liff.state ต้อง init ก่อนจึงจะได้ URL จริง · หน้าทรัพย์สาธารณะที่เปิดตรงๆ ไม่ต้องรอ LINE
+  if(hasLiff&&!(BOOT.form==='lead'&&!q.get('liff.state'))){
+    try{ await liff.init({liffId:BOOT.liffId}); BOOT.liffReady=true; q=read(); }catch(e){ BOOT.liffReady=false; }
+  }
+  if(BOOT.form==='lead'){
+    try{ const b=await call('miniBoot',{form:'lead',p:q.get('p')||'',intent:BOOT.intent}); BOOT.lead=b.lead; BOOT.intent=b.intent; BOOT.version=b.version; }catch(e){ BOOT.lead={property:null}; }
+    return showLeadForm();
+  }
+  call('miniBoot',{}).then(b=>{ BOOT.version=b.version; },()=>{});
+  // มี token เดิมในเครื่องก็ใช้ก่อน ไม่ออก token ใหม่ทุกครั้งที่เปิด (เซิร์ฟเวอร์เก็บได้ 5 เซสชันต่อคน)
+  if(TOKEN){ try{ D=await call('bootstrap'); ME=D.me; return enterUI(); }catch(e){ TOKEN=''; try{localStorage.removeItem('pm_token');}catch(x){} } }
+  if(BOOT.liffReady&&liff.isLoggedIn()){
+    try{
+      const r=await call('liffLogin',{idToken:liff.getIDToken()});
+      if(r.pending) return showPending(r.pending);
+      TOKEN=r.token; try{localStorage.setItem('pm_token',TOKEN);}catch(e){}
+      return enter();
+    }catch(e){
+      // id token หมดอายุ (เปิดแอปค้างไว้นาน) → ให้ LINE ออกใหม่ ครั้งเดียวพอ กันวนไม่จบ
+      let again=false; try{ again=!sessionStorage.getItem('pm_relogin'); sessionStorage.setItem('pm_relogin','1'); }catch(x){}
+      if(again&&/หมดอายุ|expired/i.test(e.message)&&!liff.isInClient()){ liff.logout(); return liff.login({redirectUri:location.href}); }
+      showAuth('login'); return toast(e.message);
+    }
+  }
+  showAuth('login');
+}
+// ปุ่ม LINE บนหน้าเข้าสู่ระบบของ MINI App: ในแอป LINE ล็อกอินอยู่แล้ว แค่เข้าใหม่ · เบราว์เซอร์ทั่วไปต้องพาไปหน้า LINE
+function miniLogin(){ try{sessionStorage.removeItem('pm_relogin');}catch(e){} if(liff.isLoggedIn()) miniStart(); else liff.login({redirectUri:location.href}); }
+(function start(){
+  if(BOOT.mini) return miniStart();
+  if(BOOT.form==='lead') return showLeadForm();   // หน้าสาธารณะ ไม่ต้องล็อกอิน ไม่ต้อง SSO
+  // กลับมาจาก LINE: ลบ ?code=&state= ออกจากแถบที่อยู่ กันรีเฟรช/ย้อนกลับแล้วส่งรหัสที่ใช้ไปแล้วซ้ำ
+  if(BOOT.fromCallback){ try{ google.script.history.replace(null,{}); }catch(e){} }
+  // การตรวจ state ทำที่เซิร์ฟเวอร์แล้ว token ที่ได้มาจึงใช้ได้เลย ไม่ต้องเทียบกับค่าในเครื่อง
+  if(BOOT.token){ TOKEN=BOOT.token; try{localStorage.setItem('pm_token',TOKEN);}catch(e){} }
+  if(BOOT.pending){ showPending(BOOT.pending); if(BOOT.authMsg) toast(BOOT.authMsg); return; }
+  if(TOKEN){
+    enter();
+    // ยังล็อกอินค้างอยู่ในเครื่องนี้ ไม่ต้องโชว์ error ของการกดซ้ำ ให้โชว์เฉพาะข้อความสำเร็จ เช่น เชื่อมต่อ LINE เรียบร้อย
+    if(BOOT.authMsg&&BOOT.authOk!==false) setTimeout(()=>toast(BOOT.authMsg),300);
+    return;
+  }
+  showAuth('login');
+  if(BOOT.authMsg) setTimeout(()=>toast(BOOT.authMsg),300);
+})();
+</script>
+</body>
+</html>
