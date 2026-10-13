@@ -103,7 +103,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 14px;text-align:lef
 </div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
-<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.10.08b"}</script>
+<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.10.13a"}</script>
 <script>
 // แสดง error บนหน้าจอ (แทนที่กล่องล็อกอินว่างเปล่า) เพื่อให้แก้ได้ง่าย
 window.onerror=function(msg,src,line,col,err){ try{ var b=document.getElementById('authbox'); if(b&&!b.innerHTML.trim()) b.innerHTML='<h1 style="color:#B4372B;font-size:16px">แอปโหลดไม่สำเร็จ</h1><p style="font-size:13px;word-break:break-word">'+String(msg)+' (บรรทัด '+line+')</p><p style="font-size:12px;color:#66736F">ถ่ายภาพหน้านี้ส่งให้ผู้พัฒนา หรือกด F12 → Console</p>'; }catch(e){} };
@@ -426,7 +426,7 @@ function leadThanks(msg){
 }
 function showPending(pd){   // ผู้ใช้ LINE ใหม่ที่ยังรออนุมัติ
   document.getElementById('app').classList.remove('on'); document.getElementById('auth').style.display='flex';
-  document.getElementById('authbox').innerHTML=`<h1>ยินดีต้อนรับ ${esc(pd.name)}</h1><p>บัญชีของคุณรอผู้ดูแลระบบอนุมัติ กรอกข้อมูลเพิ่มเพื่อให้ทีมงานติดต่อกลับ</p>
+  document.getElementById('authbox').innerHTML=`<h1>ยินดีต้อนรับ ${esc(pd.name)}</h1><p>บัญชี${ROLE[pd.role]||''}รอทีมงานอนุมัติ ใส่เบอร์ไว้ให้ทีมงานติดต่อกลับ หรือเลือก "ผู้ซื้อ" เพื่อดูทรัพย์ได้ทันที</p>
     <div class="f"><label>ชื่อที่ใช้แสดง</label><input id="p_name" value="${esc(pd.name)}"></div><div class="f"><label>โทรศัพท์</label><input id="p_phone" type="tel" value="${esc(pd.phone||'')}"></div>
     <div class="f"><label>คุณคือ</label><select id="p_role"><option value="buyer" ${pd.role==='buyer'?'selected':''}>ผู้ซื้อ / นักลงทุน</option><option value="owner" ${pd.role==='owner'?'selected':''}>เจ้าของทรัพย์</option><option value="broker" ${pd.role==='broker'?'selected':''}>นายหน้าภายนอก (นำทรัพย์มาลงขาย)</option></select></div>
     <button class="btn primary" id="p_go">บันทึกและรออนุมัติ</button><div class="sw"><button onclick="showAuth('login')">กลับหน้าเข้าสู่ระบบ</button></div>`;
@@ -815,8 +815,13 @@ function vSet(){
   head('ตั้งค่า',ME.email,'');
   V().innerHTML=`<div class="card" style="padding:16px"><p><b>${esc(ME.name)}</b> · ${ROLE[ME.role]}</p><p style="color:var(--muted);font-size:13.5px;margin-bottom:12px">${isStaff()?'ข้อมูลทั้งหมดเก็บใน Google Sheets ที่ผูกกับระบบ เปิดดู/ส่งออกได้จากชีตโดยตรง':isBroker()?'คุณเห็นและจัดการได้เฉพาะทรัพย์ที่คุณนำมาลง ข้อมูลติดต่อลูกค้าจากระบบจะผ่านทีมงานเสมอ':'ติดต่อนายหน้าผู้ดูแลได้จากรายการทรัพย์'}</p>
   <div style="display:flex;gap:8px;flex-wrap:wrap">${BOOT.lineChannelId&&!BOOT.mini?(ME.lineId?'<span class="btn" style="cursor:default">✓ เชื่อมต่อ LINE แล้ว</span>':`<a class="btn line" target="_top" href="${lineUrl('link:'+TOKEN)}">${LINE_SVG} เชื่อมต่อบัญชี LINE</a>`):''}<button class="btn" onclick="act(this,()=>changePin(),'กำลังเปลี่ยน PIN…')">${ME.email?'เปลี่ยน PIN':'ตั้ง PIN สำรอง'}</button><button class="btn" onclick="act(this,async()=>{await reload();toast('โหลดข้อมูลใหม่แล้ว');},'กำลังโหลด…')">โหลดข้อมูลใหม่</button><button class="btn danger" onclick="act(this,()=>logout(),'กำลังออก…')">ออกจากระบบ</button></div>
+  ${isStaff()&&BOOT.lineChannelId!==undefined?'<p id="lq" style="color:var(--muted);font-size:13px;margin-top:12px">โควตาข้อความ LINE เดือนนี้: กำลังตรวจ…</p>':''}
+  ${ME.role==='buyer'?`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><p style="font-size:13.5px;margin-bottom:8px">มีทรัพย์จะลงขายเอง? ขอสิทธิ์ได้ ทีมงานจะอนุมัติให้ (ระหว่างรอจะเข้าระบบไม่ได้ชั่วคราว)</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="act(this,()=>askRole('owner'),'กำลังส่ง…')">ขอเป็นเจ้าของทรัพย์</button><button class="btn" onclick="act(this,()=>askRole('broker'),'กำลังส่ง…')">ขอเป็นนายหน้า</button></div></div>`:''}
   <p style="color:var(--muted);font-size:12px;margin-top:12px">เวอร์ชันระบบ ${esc(BOOT.version||'-')}</p></div>`+(isAgent()?leadLinkCard():'');
   if(isAgent()) leadLink();
+  if(isStaff()) call('lineQuota').then(q=>{ const el=document.getElementById('lq'); if(!el) return;
+    el.textContent=!q?'โควตาข้อความ LINE: ยังไม่ได้ตั้งค่า LINE OA':'โควตาข้อความ LINE เดือนนี้: ใช้ไป '+fmtN(q.used)+(q.limit?' จาก '+fmtN(q.limit)+' ข้อความ':' ข้อความ (ไม่จำกัด)')+' · ระบบส่งแจ้งเตือนเข้าไลน์ให้ผู้รับผิดชอบคนเดียว คนอื่นได้อีเมล';
+    if(q&&q.limit&&q.used/q.limit>=0.8) el.style.color='var(--amber)'; },()=>{ const el=document.getElementById('lq'); if(el) el.remove(); });
 }
 /* ---------- ลิงก์รับลีด + QR สำหรับติดป้าย/ใบปลิว ---------- */
 function leadLinkCard(){
@@ -851,6 +856,12 @@ function leadCopy(btn){
   const el=document.getElementById('lk_url'); el.select();
   try{ navigator.clipboard.writeText(el.value); toast('คัดลอกลิงก์แล้ว'); }
   catch(e){ try{ document.execCommand('copy'); toast('คัดลอกลิงก์แล้ว'); }catch(x){ toast('กดค้างที่ช่องลิงก์เพื่อคัดลอก'); } }
+}
+async function askRole(role){
+  const phone=prompt('เบอร์โทรสำหรับให้ทีมงานติดต่อกลับ',ME.phone||''); if(phone===null) return;
+  if(!confirm('ส่งคำขอเป็น'+ROLE[role]+'? ระหว่างรออนุมัติจะเข้าระบบไม่ได้ชั่วคราว')) return;
+  await call('completeProfile',{role,phone:phone.trim()});
+  toast('ส่งคำขอแล้ว เมื่อได้รับอนุมัติให้เปิดจาก LINE อีกครั้ง'); logout();
 }
 async function changePin(){ const o=prompt('PIN เดิม'); if(!o) return; const n=prompt('PIN ใหม่ (ตัวเลข 4–8 หลัก)'); if(!n) return; try{ await call('changePin',{oldPin:o,newPin:n}); toast('เปลี่ยน PIN แล้ว'); }catch(e){ toast(e.message); } }
 
@@ -902,7 +913,6 @@ async function miniStart(){
     try{ const b=await call('miniBoot',{form:'lead',p:q.get('p')||'',intent:BOOT.intent}); BOOT.lead=b.lead; BOOT.intent=b.intent; BOOT.version=b.version; }catch(e){ BOOT.lead={property:null}; }
     return showLeadForm();
   }
-  call('miniBoot',{}).then(b=>{ BOOT.version=b.version; },()=>{});
   // มี token เดิมในเครื่องก็ใช้ก่อน ไม่ออก token ใหม่ทุกครั้งที่เปิด (เซิร์ฟเวอร์เก็บได้ 5 เซสชันต่อคน)
   if(TOKEN){ try{ D=await call('bootstrap'); ME=D.me; return enterUI(); }catch(e){ TOKEN=''; try{localStorage.removeItem('pm_token');}catch(x){} } }
   if(BOOT.liffReady&&liff.isLoggedIn()){
