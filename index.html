@@ -103,7 +103,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 14px;text-align:lef
 </div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
-<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.10.13a"}</script>
+<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.10.14a"}</script>
 <script>
 // แสดง error บนหน้าจอ (แทนที่กล่องล็อกอินว่างเปล่า) เพื่อให้แก้ได้ง่าย
 window.onerror=function(msg,src,line,col,err){ try{ var b=document.getElementById('authbox'); if(b&&!b.innerHTML.trim()) b.innerHTML='<h1 style="color:#B4372B;font-size:16px">แอปโหลดไม่สำเร็จ</h1><p style="font-size:13px;word-break:break-word">'+String(msg)+' (บรรทัด '+line+')</p><p style="font-size:12px;color:#66736F">ถ่ายภาพหน้านี้ส่งให้ผู้พัฒนา หรือกด F12 → Console</p>'; }catch(e){} };
@@ -391,6 +391,7 @@ function showLeadForm(){
       <div class="f"><label>จังหวัด / ทำเล</label><input id="ld_province"></div>
       <div class="f"><label>งบประมาณไม่เกิน (บาท)</label><input id="ld_max" type="number" inputmode="numeric" step="any"></div>
     </div>
+    ${pr&&pr.status==='available'?`<div class="f"><label>อยากนัดชม? เลือกวันที่สะดวก (ไม่บังคับ)</label><div style="display:flex;gap:6px"><input id="ld_vdate" type="date" min="${new Date().toISOString().slice(0,10)}" style="flex:1"><select id="ld_vslot" style="flex:1"><option value="เช้า 9:00">เช้า 9:00</option><option value="บ่าย 13:00">บ่าย 13:00</option><option value="เย็น 16:00">เย็น 16:00</option></select></div></div>`:''}
     <div class="f"><label>ข้อความเพิ่มเติม</label><textarea id="ld_msg" rows="2"></textarea></div>
     <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Website</label><input id="ld_hp" tabindex="-1" autocomplete="off"></div>
     <button class="btn primary" id="ld_go">ส่งข้อมูล</button>
@@ -410,7 +411,8 @@ function showLeadForm(){
   go.onclick=()=>act(go,async()=>{
     const r=await call('submitLead',{name:val('ld_name'),phone:val('ld_phone'),intent:val('ld_intent'),
       type:val('ld_type'),province:val('ld_province'),maxPrice:val('ld_max'),message:val('ld_msg'),
-      website:val('ld_hp'),src:BOOT.src||'',propertyId:pr?pr.id:''});
+      website:val('ld_hp'),src:BOOT.src||'',propertyId:pr?pr.id:'',
+      viewDate:document.getElementById('ld_vdate')?val('ld_vdate'):'',viewSlot:document.getElementById('ld_vslot')?val('ld_vslot'):''});
     leadThanks(r.message);
   },'กำลังส่ง…');
   document.getElementById('authbox').querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')go.click();}));
