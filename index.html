@@ -87,6 +87,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 14px;text-align:lef
 .pp-bot{padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#fff}.pp-ll{font-size:13px;color:var(--muted);margin-bottom:8px;text-align:center}.pp-bot .btn{width:100%;justify-content:center;padding:13px;font-size:16px}.pp-tip{font-size:12px;color:var(--muted);margin-top:8px;text-align:center}
 /* หน้าทรัพย์สาธารณะ (ลิงก์ที่ส่งให้ลูกค้า) */
 .pubcard{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:-6px -4px 16px;background:#fff}
+.pub{min-height:100vh;background:var(--paper);padding:14px 14px calc(20px + env(safe-area-inset-bottom));max-width:1100px;margin:0 auto}.pub h1{font-size:19px;color:var(--ink);margin-bottom:2px}.pub .sub{color:var(--muted);font-size:13px;margin-bottom:12px}.pub .toolbar select{min-width:0;flex:1}.pub .grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.pub .pcard{text-decoration:none;color:inherit;display:block}.pub .pcard .hl{font-size:12.5px;color:var(--text);margin-top:4px;line-height:1.4}.pub .mapwrap{height:60vh;min-height:300px}.pub .switch{display:flex;gap:6px;margin-bottom:12px}.pub .switch .btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}.pub .foot{text-align:center;color:var(--muted);font-size:12.5px;margin-top:18px}
 .pubhero{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#EEF1EF}
 .pubstrip{display:flex;gap:6px;overflow-x:auto;padding:8px 8px 0}.pubstrip img{width:66px;height:50px;object-fit:cover;border-radius:6px;flex:none;cursor:pointer;border:2px solid transparent}.pubstrip img.on{border-color:var(--gold)}
 .pubbody{padding:12px 14px 14px}.pubname{font-weight:700;color:var(--ink);font-size:16.5px;line-height:1.35}.pubprice{font-weight:700;color:var(--ink);font-size:20px;margin:4px 0 2px}.pubmeta{font-size:13px;color:var(--muted)}
@@ -103,7 +104,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 14px;text-align:lef
 </div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
-<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.10.14a"}</script>
+<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.10.14b"}</script>
 <script>
 // แสดง error บนหน้าจอ (แทนที่กล่องล็อกอินว่างเปล่า) เพื่อให้แก้ได้ง่าย
 window.onerror=function(msg,src,line,col,err){ try{ var b=document.getElementById('authbox'); if(b&&!b.innerHTML.trim()) b.innerHTML='<h1 style="color:#B4372B;font-size:16px">แอปโหลดไม่สำเร็จ</h1><p style="font-size:13px;word-break:break-word">'+String(msg)+' (บรรทัด '+line+')</p><p style="font-size:12px;color:#66736F">ถ่ายภาพหน้านี้ส่งให้ผู้พัฒนา หรือกด F12 → Console</p>'; }catch(e){} };
@@ -395,7 +396,8 @@ function showLeadForm(){
     <div class="f"><label>ข้อความเพิ่มเติม</label><textarea id="ld_msg" rows="2"></textarea></div>
     <div style="position:absolute;left:-9999px" aria-hidden="true"><label>Website</label><input id="ld_hp" tabindex="-1" autocomplete="off"></div>
     <button class="btn primary" id="ld_go">ส่งข้อมูล</button>
-    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px">ข้อมูลของคุณใช้เพื่อติดต่อกลับเท่านั้น</p>`;
+    <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px">ข้อมูลของคุณใช้เพื่อติดต่อกลับเท่านั้น</p>
+    <p style="text-align:center;margin-top:8px"><a href="${esc((BOOT.miniUrl||BOOT.appUrl)+'?form=list&src='+encodeURIComponent(BOOT.src||''))}" style="font-size:13.5px;color:var(--ink2)">ดูทรัพย์ทั้งหมดที่เปิดขาย →</a></p>`;
   leadToggle();
   // แผนที่ตำแหน่งทรัพย์ในหน้าลูกค้า: บนมือถือปิดการลากด้วยนิ้วเดียว ไม่ให้แย่งการเลื่อนหน้า (ซูมด้วยปุ่ม +/−)
   if(pr&&pr.ll) loadLeaflet().then(L=>{
@@ -416,6 +418,48 @@ function showLeadForm(){
     leadThanks(r.message);
   },'กำลังส่ง…');
   document.getElementById('authbox').querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter')go.click();}));
+}
+/* ---------- หน้ารวมทรัพย์สาธารณะ (?form=list) ไม่ต้องล็อกอิน: การ์ด + ตัวกรอง + แผนที่ กดการ์ดไปหน้าทรัพย์/ฟอร์มลีด ---------- */
+let PUBMAP=null;
+function showPublicList(){
+  document.getElementById('app').classList.remove('on'); document.getElementById('auth').style.display='none';
+  const all=BOOT.list||[], src=BOOT.src||'รวมทรัพย์';
+  const provs=[...new Set(all.map(p=>p.province).filter(Boolean))].sort();
+  let root=document.getElementById('pub'); if(!root){ root=document.createElement('div'); root.id='pub'; root.className='pub'; document.body.appendChild(root); }
+  root.innerHTML=`<h1>ทรัพย์ที่เปิดขาย</h1><div class="sub" id="pb_n"></div>
+    <div class="toolbar"><select id="pb_type"><option value="">ทุกประเภท</option>${Object.entries(PTYPE).map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select>
+    <select id="pb_prov"><option value="">ทุกจังหวัด</option>${provs.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')}</select>
+    <select id="pb_price"><option value="">ทุกราคา</option><option value="1000000">ไม่เกิน 1 ล้าน</option><option value="3000000">ไม่เกิน 3 ล้าน</option><option value="5000000">ไม่เกิน 5 ล้าน</option><option value="10000000">ไม่เกิน 10 ล้าน</option></select>
+    <select id="pb_deal"><option value="">ขาย/เช่า/ขายฝาก</option>${Object.entries(PDEAL).filter(([k])=>k!=='invest').map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select></div>
+    <div class="switch"><button class="btn sm on" id="pb_cards">รายการ</button><button class="btn sm" id="pb_map">แผนที่</button></div>
+    <div id="pb_out"></div>
+    <div class="foot">สนใจรายการไหน กดเข้าไปฝากเบอร์ได้เลย ทีมงานโทรกลับ${BOOT.lineChannelId?' · หรือพิมพ์ "ทรัพย์" ในแชต LINE ของเรา':''}</div>`;
+  const link=p=>BOOT.appUrl+'?form=lead&p='+encodeURIComponent(p.id)+'&src='+encodeURIComponent(src);
+  const filt=()=>{ const t=document.getElementById('pb_type').value, pv=document.getElementById('pb_prov').value, mx=Number(document.getElementById('pb_price').value), d=document.getElementById('pb_deal').value;
+    return all.filter(p=>(!t||p.type===t)&&(!pv||p.province===pv)&&(!mx||(p.price&&p.price<=mx))&&(!d||p.deal===d)); };
+  let mode='cards';
+  const draw=async()=>{
+    const list=filt(); document.getElementById('pb_n').textContent=list.length+' รายการ'+(list.length<all.length?' จากทั้งหมด '+all.length:'');
+    const out=document.getElementById('pb_out');
+    if(PUBMAP){ try{PUBMAP.remove();}catch(e){} PUBMAP=null; }
+    if(mode==='cards'){
+      out.innerHTML='<div class="grid3">'+(list.map(p=>`<a class="pcard" href="${esc(link(p))}">${p.image?`<img src="${esc(p.image)}" loading="lazy" alt="">`:'<div class="noimg">ยังไม่มีรูป</div>'}<div class="b"><div class="t">${esc(p.name)}</div><div class="s">${esc(p.detail)}</div><div class="p">${p.price?fmtN(p.price)+' ฿':'สอบถามราคา'}${p.deal==='rent'&&p.price?'/เดือน':''} ${p.status==='reserved'?'<span class="tag amber">ติดจอง</span>':''}</div>${p.highlight?`<div class="hl">${esc(p.highlight)}</div>`:''}</div></a>`).join('')||empty('ไม่พบทรัพย์ตามเงื่อนไข',''))+'</div>';
+      return;
+    }
+    out.innerHTML='<div id="pb_mapbox" class="mapwrap"></div>';
+    let L; try{ L=await loadLeaflet(); }catch(e){ out.innerHTML='<div class="empty"><b>โหลดแผนที่ไม่สำเร็จ</b></div>'; return; }
+    const box=document.getElementById('pb_mapbox'); if(!box) return;
+    const m=L.map(box,{zoomControl:false}); PUBMAP=m; L.control.zoom({position:'bottomright'}).addTo(m);
+    L.tileLayer(OSM_TILES,{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
+    const pts=list.filter(p=>p.ll);
+    pts.forEach(p=>L.marker(p.ll,{icon:pinIcon(PIN_COLOR[p.status]||'#C39A2B')}).addTo(m).bindPopup(`<div class="mappop">${p.image?`<img src="${esc(p.image)}" alt="">`:''}<b>${esc(p.name)}</b><div class="mappop-price">${p.price?fmtN(p.price)+' ฿':'สอบถามราคา'}</div><div class="mappop-meta">${esc(p.detail)}</div><div class="mappop-btn"><a class="btn sm primary" href="${esc(link(p))}">ดูรายละเอียด</a></div></div>`,{autoPanPadding:[24,24]}));
+    if(pts.length) m.fitBounds(pts.map(p=>p.ll),{padding:[36,36],maxZoom:14}); else m.setView([15.5,101],6);
+    setTimeout(()=>m.invalidateSize(),80);
+  };
+  ['pb_type','pb_prov','pb_price','pb_deal'].forEach(id=>document.getElementById(id).onchange=draw);
+  document.getElementById('pb_cards').onclick=()=>{ mode='cards'; document.getElementById('pb_cards').classList.add('on'); document.getElementById('pb_map').classList.remove('on'); draw(); };
+  document.getElementById('pb_map').onclick=()=>{ mode='map'; document.getElementById('pb_map').classList.add('on'); document.getElementById('pb_cards').classList.remove('on'); draw(); };
+  draw();
 }
 // ลูกค้าที่มาจากหน้าทรัพย์รู้อยู่แล้วว่าสนใจอะไร ไม่ต้องถามประเภท/ทำเล/งบซ้ำ
 function leadToggle(){ const el=document.getElementById('ld_buy'); if(el) el.hidden=!!(BOOT.lead&&BOOT.lead.property)||document.getElementById('ld_intent').value!=='buy'; }
@@ -831,7 +875,7 @@ function leadLinkCard(){
     <p class="sub" style="padding:0;margin-bottom:10px">ติดป้ายหน้าทรัพย์ ใบปลิว หรือนามบัตร ลูกค้าสแกนแล้วกรอกชื่อ-เบอร์ ระบบจะสร้างงานโทรกลับให้ทันที</p>
     <div class="form" style="grid-template-columns:1fr 1fr">
       <div class="f"><label>แหล่งที่มา (ใช้แยกว่าลีดมาจากไหน)</label><input id="lk_src" value="ป้ายหน้าทรัพย์" oninput="leadLink()"></div>
-      <div class="f"><label>เจาะจงทรัพย์ (ไม่บังคับ)</label><select id="lk_prop" onchange="leadLink()"><option value="">- ฟอร์มทั่วไป -</option>${D.Properties.filter(p=>['available','reserved'].includes(p.status)).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></div>
+      <div class="f"><label>เจาะจงทรัพย์ (ไม่บังคับ)</label><select id="lk_prop" onchange="leadLink()"><option value="">- ฟอร์มทั่วไป -</option><option value="*">- หน้ารวมทรัพย์ทั้งหมด (ใส่โปรไฟล์ LINE / Facebook / นามบัตร) -</option>${D.Properties.filter(p=>['available','reserved'].includes(p.status)).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('')}</select></div>
       <div class="f full"><label>ลิงก์</label><input id="lk_url" readonly onclick="this.select()"></div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">
@@ -844,7 +888,9 @@ function leadLinkCard(){
 }
 function leadUrl(){
   const src=document.getElementById('lk_src').value.trim(), pid=document.getElementById('lk_prop').value;
-  return BOOT.appUrl+'?form=lead'+(src?'&src='+encodeURIComponent(src):'')+(pid?'&p='+encodeURIComponent(pid):'');
+  const base=BOOT.miniUrl||BOOT.appUrl;   // มีหน้า MINI App แล้วใช้หน้านั้น (ไม่มีแถบเตือนของ Google)
+  if(pid==='*') return base+'?form=list'+(src?'&src='+encodeURIComponent(src):'');
+  return base+'?form=lead'+(src?'&src='+encodeURIComponent(src):'')+(pid?'&p='+encodeURIComponent(pid):'');
 }
 function leadLink(){
   const u=leadUrl();
@@ -908,12 +954,17 @@ async function miniStart(){
   let q=read();
   const hasLiff=!!(BOOT.liffId&&window.liff);
   // ลิงก์ liff.line.me ส่งพารามิเตอร์มาใน liff.state ต้อง init ก่อนจึงจะได้ URL จริง · หน้าทรัพย์สาธารณะที่เปิดตรงๆ ไม่ต้องรอ LINE
-  if(hasLiff&&!(BOOT.form==='lead'&&!q.get('liff.state'))){
+  if(hasLiff&&!((BOOT.form==='lead'||BOOT.form==='list')&&!q.get('liff.state'))){
     try{ await liff.init({liffId:BOOT.liffId}); BOOT.liffReady=true; q=read(); }catch(e){ BOOT.liffReady=false; }
   }
   if(BOOT.form==='lead'){
     try{ const b=await call('miniBoot',{form:'lead',p:q.get('p')||'',intent:BOOT.intent}); BOOT.lead=b.lead; BOOT.intent=b.intent; BOOT.version=b.version; }catch(e){ BOOT.lead={property:null}; }
     return showLeadForm();
+  }
+  if(BOOT.form==='list'){
+    box.innerHTML='<h1>กำลังโหลดรายการ…</h1>'; document.getElementById('auth').style.display='flex';
+    try{ const b=await call('miniBoot',{form:'list'}); BOOT.list=b.list||[]; }catch(e){ BOOT.list=[]; }
+    return showPublicList();
   }
   // มี token เดิมในเครื่องก็ใช้ก่อน ไม่ออก token ใหม่ทุกครั้งที่เปิด (เซิร์ฟเวอร์เก็บได้ 5 เซสชันต่อคน)
   if(TOKEN){ try{ D=await call('bootstrap'); ME=D.me; return enterUI(); }catch(e){ TOKEN=''; try{localStorage.removeItem('pm_token');}catch(x){} } }
@@ -936,6 +987,7 @@ async function miniStart(){
 function miniLogin(){ try{sessionStorage.removeItem('pm_relogin');}catch(e){} if(liff.isLoggedIn()) miniStart(); else liff.login({redirectUri:location.href}); }
 (function start(){
   if(BOOT.mini) return miniStart();
+  if(BOOT.form==='list') return showPublicList();   // หน้ารวมทรัพย์สาธารณะ
   if(BOOT.form==='lead') return showLeadForm();   // หน้าสาธารณะ ไม่ต้องล็อกอิน ไม่ต้อง SSO
   // กลับมาจาก LINE: ลบ ?code=&state= ออกจากแถบที่อยู่ กันรีเฟรช/ย้อนกลับแล้วส่งรหัสที่ใช้ไปแล้วซ้ำ
   if(BOOT.fromCallback){ try{ google.script.history.replace(null,{}); }catch(e){} }
