@@ -104,7 +104,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 14px;text-align:lef
 </div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
-<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.11.08b"}</script>
+<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.11.08d"}</script>
 <script>
 // แสดง error บนหน้าจอ (แทนที่กล่องล็อกอินว่างเปล่า) เพื่อให้แก้ได้ง่าย
 window.onerror=function(msg,src,line,col,err){ try{ var b=document.getElementById('authbox'); if(b&&!b.innerHTML.trim()) b.innerHTML='<h1 style="color:#B4372B;font-size:16px">แอปโหลดไม่สำเร็จ</h1><p style="font-size:13px;word-break:break-word">'+String(msg)+' (บรรทัด '+line+')</p><p style="font-size:12px;color:#66736F">ถ่ายภาพหน้านี้ส่งให้ผู้พัฒนา หรือกด F12 → Console</p>'; }catch(e){} };
@@ -558,6 +558,32 @@ const empty=(b,s)=>`<div class="empty"><b>${b}</b>${s}</div>`;
 const selMap=m=>Object.fromEntries(Object.entries(m).map(([k,v])=>[k,Array.isArray(v)?v[0]:v]));
 
 /* ---------- dashboard (staff) ---------- */
+/* ---------- ผลงานนายหน้ารายเดือน — ต้องตรงกับ agentStats ใน Code.gs ---------- */
+function agentStats(u,ym){
+  const inM=d=>String(d||'').slice(0,7)===ym, pb=id=>(byId(D.Properties,id)||{}).brokerUser;
+  const leads=D.Tasks.filter(t=>t.assignee===u.id&&['call','viewing'].includes(t.type)&&inM(t.createdAt));
+  const views=D.Viewings.filter(v=>v.brokerUser===u.id&&inM(v.date)&&v.result!=='cancelled');
+  let deals=0,sales=0,comm=0;
+  D.Deals.filter(d=>d.status==='closed'&&inM(d.closeDate)).forEach(d=>{
+    const sp=d.splits||[], share=sp.length?sp.filter(x=>x.user===u.id).reduce((a,x)=>a+(+x.pct||0),0)/100:(pb(d.property)===u.id?1:0);
+    if(!share) return; deals++; sales+=+d.price||0; comm+=(+d.commissionAmt||0)*share; });
+  return {props:D.Properties.filter(p=>p.brokerUser===u.id&&inM(p.createdAt)).length,leads:leads.length,leadsDone:leads.filter(t=>t.done).length,
+    views:views.length,hot:views.filter(v=>['interested','offer'].includes(v.result)).length,deals,sales,comm:Math.round(comm),rate:views.length?Math.min(100,Math.round(deals/views.length*100)):0};
+}
+let PERF_YM='';
+function perfCard(){
+  const ym=PERF_YM||today().slice(0,7), d=new Date(ym+'-01T00:00:00');
+  const shift=n=>{ const x=new Date(d); x.setMonth(x.getMonth()+n); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0'); };
+  const people=(isStaff()?D.Users.filter(u=>['admin','staff','broker'].includes(u.role)&&u.status==='active'):[ME]);
+  const rows=people.map(u=>({u,x:agentStats(u,ym)})).filter(r=>!isStaff()||r.x.props||r.x.leads||r.x.views||r.x.deals).sort((a,b)=>b.x.comm-a.x.comm||b.x.deals-a.x.deals||b.x.views-a.x.views);
+  const label=d.toLocaleDateString('th-TH',{month:'long',year:'numeric'});
+  const th='style="text-align:right;padding:6px 8px;font-weight:600;color:var(--muted);font-size:12.5px;white-space:nowrap"', td='style="text-align:right;padding:6px 8px;white-space:nowrap"';
+  return `<div class="card" style="padding:14px;margin-top:14px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><h3 style="padding:0;flex:1">${isStaff()?'ผลงานทีม':'ผลงานของฉัน'} · ${label}</h3>
+    <button class="btn sm" onclick="PERF_YM='${shift(-1)}';render()">‹ เดือนก่อน</button>${ym<today().slice(0,7)?`<button class="btn sm" onclick="PERF_YM='${shift(1)}';render()">เดือนถัดไป ›</button>`:''}</div>
+    ${rows.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="border-bottom:1px solid var(--line)"><th style="text-align:left;padding:6px 8px;color:var(--muted);font-size:12.5px">ชื่อ</th><th ${th}>ลงทรัพย์</th><th ${th}>ลีด (ปิดแล้ว)</th><th ${th}>นัดชม (สนใจ)</th><th ${th}>ดีลโอน</th><th ${th}>ยอดขาย</th><th ${th}>ค่าคอม</th><th ${th}>อัตราปิด</th></tr>
+    ${rows.map(({u,x})=>`<tr style="border-bottom:1px solid var(--line)"><td style="padding:6px 8px">${esc(u.name)}</td><td ${td}>${x.props}</td><td ${td}>${x.leads} (${x.leadsDone})</td><td ${td}>${x.views} (${x.hot})</td><td ${td}>${x.deals}</td><td ${td}>${fmtN(x.sales)}</td><td ${td}><b>${fmtN(x.comm)}</b></td><td ${td}>${x.views?x.rate+'%':'-'}</td></tr>`).join('')}</table></div>`:'<p style="color:var(--muted);font-size:13.5px">ยังไม่มีความเคลื่อนไหวในเดือนนี้</p>'}
+    <p style="color:var(--muted);font-size:12px;margin-top:8px">นับตามเดือน: ทรัพย์=วันลง · ลีด=วันที่ได้รับงาน · นัดชม=วันนัด · ดีล=วันโอน · ค่าคอมแบ่งตามสัดส่วนในดีล · อัตราปิด = ดีลโอน ÷ นัดชม${isStaff()?' · ส่งออกไป Looker Studio ได้จากชีต RPT_Agents':''}</p></div>`;
+}
 function vDash(){
   head('ภาพรวม',new Date().toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),`<button class="btn primary" onclick="editProp()">+ เพิ่มทรัพย์</button>`);
   const act=D.Contracts.filter(c=>['active','extended'].includes(c.status));
@@ -799,7 +825,7 @@ function editViewing(id,propId,buyerId){
 function vDeal(){
   head('ดีลและค่าคอมมิชชั่น',`ค่าคอมรอรับ ${fmtN(D.Deals.filter(d=>d.status!=='cancelled'&&!d.posted).reduce((s,d)=>s+Number(d.commissionAmt),0))} ฿`,`<button class="btn primary" onclick="editDeal()">+ เปิดดีล</button>`);
   const list=D.Deals.filter(d=>match(pName(d.property)+uName(d.buyerUser))&&(!filter.a||d.status===filter.a)).sort((a,b)=>(b.closeDate||'').localeCompare(a.closeDate||''));
-  V().innerHTML=toolbar('ค้นหา…',{label:'ทุกสถานะ',map:DSTATUS})+`<div class="card"><div class="rows">${list.map(d=>`<div class="row" onclick="editDeal('${d.id}')"><div><div class="t">${esc(pName(d.property))}</div><div class="s">ผู้ซื้อ ${esc(uName(d.buyerUser))} · ${(d.splits||[]).map(s=>`${esc(s.name||uName(s.user))} ${s.pct}%`).join(' / ')||'ยังไม่แบ่ง'}</div></div><div class="right">${fmtN(d.price)} ฿<div class="s">ค่าคอม ${fmtN(d.commissionAmt)} (${d.commissionPct}%) ${tag(DSTATUS,d.status)}${d.posted?' <span class="tag ink">ลงบัญชีแล้ว</span>':''}</div></div></div>`).join('')||empty('ยังไม่มีดีล','')}</div></div>`;
+  V().innerHTML=toolbar('ค้นหา…',{label:'ทุกสถานะ',map:DSTATUS})+`<div class="card"><div class="rows">${list.map(d=>`<div class="row" onclick="editDeal('${d.id}')"><div><div class="t">${esc(pName(d.property))}</div><div class="s">ผู้ซื้อ ${esc(uName(d.buyerUser))} · ${(d.splits||[]).map(s=>`${esc(s.name||uName(s.user))} ${s.pct}%`).join(' / ')||'ยังไม่แบ่ง'}</div></div><div class="right">${fmtN(d.price)} ฿<div class="s">ค่าคอม ${fmtN(d.commissionAmt)} (${d.commissionPct}%) ${tag(DSTATUS,d.status)}${d.posted?' <span class="tag ink">ลงบัญชีแล้ว</span>':''}</div></div></div>`).join('')||empty('ยังไม่มีดีล','')}</div></div>`+perfCard();
 }
 function editDeal(id,propId){
   const d=id?byId(D.Deals,id):{property:propId||'',status:'negotiating',commissionPct:3,closeDate:today(),splits:[{user:ME.id,name:'',pct:100}]};
