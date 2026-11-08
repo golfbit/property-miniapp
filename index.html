@@ -104,7 +104,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 14px;text-align:lef
 </div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
-<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.11.08a"}</script>
+<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.11.08b"}</script>
 <script>
 // แสดง error บนหน้าจอ (แทนที่กล่องล็อกอินว่างเปล่า) เพื่อให้แก้ได้ง่าย
 window.onerror=function(msg,src,line,col,err){ try{ var b=document.getElementById('authbox'); if(b&&!b.innerHTML.trim()) b.innerHTML='<h1 style="color:#B4372B;font-size:16px">แอปโหลดไม่สำเร็จ</h1><p style="font-size:13px;word-break:break-word">'+String(msg)+' (บรรทัด '+line+')</p><p style="font-size:12px;color:#66736F">ถ่ายภาพหน้านี้ส่งให้ผู้พัฒนา หรือกด F12 → Console</p>'; }catch(e){} };
@@ -699,7 +699,38 @@ function editListing(id,propId){
 }
 
 /* ---------- contracts (ขายฝาก) ---------- */
-function rowCont(c){ const d=daysTo(c.due),act=['active','extended'].includes(c.status); return `<div class="row" onclick="editCont('${c.id}')"><div><div class="t">${esc(pName(c.property))}</div><div class="s">ผู้ขายฝาก ${esc(uName(c.seller))} · ${c.rate}% ต่อปี · ${c.months} เดือน · ครบ ${fmtD(c.due)}${act?` <b style="color:${d<=7?'var(--red)':d<=30?'var(--amber)':'inherit'}">(${d<0?'เกิน '+(-d):'อีก '+d} วัน)</b>`:''}</div></div><div class="right">${fmtN(c.amount)} ฿<div class="s">สินไถ่ ${fmtN(redemption(c))} · ${tag(CSTATUS,c.status)}</div></div></div>`; }
+/* งวดผลตอบแทนขายฝาก — ต้องตรงกับ consignSchedule ใน Code.gs (คำนวณจากสัญญา หักด้วยรายรับหมวด interest ตามลำดับงวด) */
+const CONSIGN_STEP={monthly:1,quarterly:3};
+function consignSchedule(c){
+  const amount=+c.amount||0, rate=+c.rate||0, months=+c.months||0;
+  if(!amount||!months||!c.start) return [];
+  const step=CONSIGN_STEP[c.payment]||months, rows=[];
+  for(let m=0,n=1;m<months;m+=step,n++){ const len=Math.min(step,months-m); rows.push({n,due:addMonths(c.start,m+len),amount:Math.round(amount*rate/100*len/12)}); }
+  let got=(D.Transactions||[]).filter(t=>t.contract===c.id&&t.type==='income'&&t.cat==='interest').reduce((x,t)=>x+(+t.amount||0),0);
+  rows.forEach(r=>{ r.paid=Math.min(r.amount,got); got-=r.paid; r.left=r.amount-r.paid; r.state=!r.left?'paid':daysTo(r.due)<0?'late':'open'; });
+  return rows;
+}
+function consignBadge(c){
+  if(!['active','extended'].includes(c.status)) return '';
+  const rows=consignSchedule(c), late=rows.filter(r=>r.state==='late'), next=rows.find(r=>r.left);
+  return (late.length?` · <b style="color:var(--red)">ค้าง ${late.length} งวด ${fmtN(late.reduce((s,r)=>s+r.left,0))} ฿</b>`:'')+(next&&next.state!=='late'?` · งวดถัดไป ${fmtD(next.due)} ${fmtN(next.left)} ฿`:'');
+}
+function consignTable(c){
+  const rows=consignSchedule(c); if(!rows.length) return '';
+  const tag2=r=>r.state==='paid'?'<span class="tag green">รับแล้ว</span>':r.state==='late'?`<span class="tag red">ค้าง${r.paid?' (รับบางส่วน)':''}</span>`:(r.paid?'<span class="tag amber">รับบางส่วน</span>':'<span class="tag">รอ</span>');
+  const firstOpen=rows.find(r=>r.left);
+  const shown=rows.length>8?rows.filter(r=>r.left||r.n>rows.length-3).slice(0,8):rows;
+  return `<h4>งวดผลตอบแทน (${rows.filter(r=>!r.left).length}/${rows.length} งวดรับแล้ว)</h4>`+shown.map(r=>`<div class="li"><span>งวด ${r.n} · ${fmtD(r.due)} · ${fmtN(r.amount)} ฿${r.paid&&r.left?' (เหลือ '+fmtN(r.left)+')':''}</span><span style="display:flex;gap:6px;align-items:center">${tag2(r)}${isStaff()&&r===firstOpen?`<button type="button" class="btn sm" onclick="act(this,()=>payInstallment('${c.id}',${r.n}),'กำลังบันทึก…')">รับเงินงวดนี้</button>`:''}</span></div>`).join('')+
+    (shown.length<rows.length?`<div class="li" style="color:var(--muted)">แสดงงวดที่ยังค้าง ${shown.length} จาก ${rows.length} งวด</div>`:'')+
+    `<div class="li" style="color:var(--muted)">ครบกำหนดไถ่ ${fmtD(c.due)} · สินไถ่ ${fmtN(+c.amount+rows.reduce((s,r)=>s+r.amount,0)*(c.payment==='lump'?1:0))} ฿${c.payment==='lump'?' (รวมผลตอบแทน)':' + งวดที่ค้าง'}</div>`;
+}
+async function payInstallment(cid,n){
+  const c=byId(D.Contracts,cid), r=consignSchedule(c).find(x=>x.n===n); if(!r||!r.left) return toast('งวดนี้รับครบแล้ว');
+  const v=prompt('จำนวนเงินที่รับงวดที่ '+n+' (บาท)',r.left); if(v===null) return;
+  const amt=Number(String(v).replace(/,/g,'')); if(!amt) return toast('ใส่จำนวนเงิน');
+  await saveRow('Transactions',{date:today(),type:'income',cat:'interest',amount:amt,property:c.property,contract:c.id,user:ME.id,note:'งวดที่ '+n},'บันทึกรับงวดที่ '+n+' แล้ว');
+}
+function rowCont(c){ const d=daysTo(c.due),act=['active','extended'].includes(c.status); return `<div class="row" onclick="editCont('${c.id}')"><div><div class="t">${esc(pName(c.property))}</div><div class="s">ผู้ขายฝาก ${esc(uName(c.seller))} · ${c.rate}% ต่อปี · ${c.months} เดือน · ครบ ${fmtD(c.due)}${act?` <b style="color:${d<=7?'var(--red)':d<=30?'var(--amber)':'inherit'}">(${d<0?'เกิน '+(-d):'อีก '+d} วัน)</b>`:''}${isAgent()?consignBadge(c):''}</div></div><div class="right">${fmtN(c.amount)} ฿<div class="s">สินไถ่ ${fmtN(redemption(c))} · ${tag(CSTATUS,c.status)}</div></div></div>`; }
 function vCont(){
   const act=D.Contracts.filter(c=>['active','extended'].includes(c.status));
   head('ขายฝาก',`${act.length} สัญญา · เงินลงทุน ${fmtN(act.reduce((s,c)=>s+Number(c.amount),0))} ฿`,isAgent()?`<button class="btn primary" onclick="editCont()">+ ทำสัญญาใหม่</button>`:'');
@@ -713,7 +744,7 @@ function editCont(id,propId){
     {k:'payment',l:'การจ่ายผลตอบแทน',t:'select',o:{monthly:'รายเดือน',quarterly:'ราย 3 เดือน',lump:'จ่ายครั้งเดียวตอนไถ่'}},{k:'status',l:'สถานะ',t:'select',o:selMap(CSTATUS)},{k:'brokerUser',l:'ผู้ดูแล',t:'select',o:opts(staffUsers()),dis:isBroker()},{k:'note',l:'เงื่อนไข / บันทึก',t:'textarea',full:1}];
   let linked='';
   if(id&&isAgent()){ const tr=D.Transactions.filter(t=>t.contract===id), got=tr.filter(t=>t.type==='income').reduce((s,t)=>s+Number(t.amount),0);
-    linked=`<div class="linked"><h4>ผลตอบแทนที่รับแล้ว ${fmtN(got)} ฿ (${tr.filter(t=>t.type==='income').length} ครั้ง)</h4>${tr.slice(0,5).map(t=>`<div class="li"><span>${fmtD(t.date)} ${TRCAT[t.cat]||''}</span><span class="${t.type}">${t.type==='income'?'+':'-'}${fmtN(t.amount)}</span></div>`).join('')}
+    linked=`<div class="linked">${consignTable(c)}<h4>ผลตอบแทนที่รับแล้ว ${fmtN(got)} ฿ (${tr.filter(t=>t.type==='income').length} ครั้ง)</h4>${tr.slice(0,5).map(t=>`<div class="li"><span>${fmtD(t.date)} ${TRCAT[t.cat]||''}</span><span class="${t.type}">${t.type==='income'?'+':'-'}${fmtN(t.amount)}</span></div>`).join('')}
     <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn sm" onclick="closeModal();editTr(null,'${c.property}','${id}')">+ บันทึกรับดอกผล</button><button type="button" class="btn sm" onclick="act(this,()=>extendCont('${id}'),'กำลังต่อสัญญา…')">ต่อสัญญา +12 เดือน</button></div></div>`; }
   const calc=f=>{const E=f.elements,a=+E.amount.value||0,r=+E.rate.value||0,m=+E.months.value||0,t=a*(r/100)*(m/12);return `<span>ครบกำหนดไถ่ <b>${E.start.value?fmtD(addMonths(E.start.value,m)):'-'}</b></span><span>ผลตอบแทนรวม <b>${fmtN(t)} ฿</b> (≈ ${fmtN(m?t/m:0)}/เดือน)</span><span>สินไถ่ <b>${fmtN(a+t)} ฿</b></span>`;};
   openForm(id?'สัญญาขายฝาก':'ทำสัญญาขายฝากใหม่',fields,c,linked,d=>{ if(!d.property) return toast('เลือกทรัพย์'); if(!Number(d.amount)) return toast('ใส่วงเงิน'); return saveRow('Contracts',Object.assign({},c,d)); },id&&isAgent()?()=>delRow('Contracts',id):null,calc,!isAgent());
