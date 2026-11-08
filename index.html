@@ -104,7 +104,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 14px;text-align:lef
 </div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
-<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.11.08d"}</script>
+<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.11.08e"}</script>
 <script>
 // แสดง error บนหน้าจอ (แทนที่กล่องล็อกอินว่างเปล่า) เพื่อให้แก้ได้ง่าย
 window.onerror=function(msg,src,line,col,err){ try{ var b=document.getElementById('authbox'); if(b&&!b.innerHTML.trim()) b.innerHTML='<h1 style="color:#B4372B;font-size:16px">แอปโหลดไม่สำเร็จ</h1><p style="font-size:13px;word-break:break-word">'+String(msg)+' (บรรทัด '+line+')</p><p style="font-size:12px;color:#66736F">ถ่ายภาพหน้านี้ส่งให้ผู้พัฒนา หรือกด F12 → Console</p>'; }catch(e){} };
@@ -325,7 +325,7 @@ function shareBox(p){
 
 /* ---------- server ---------- */
 // คำสั่งที่เขียนข้อมูล — ห้ามส่งซ้อนกัน กันกดซ้ำแล้วได้รายการซ้ำ (เซิร์ฟเวอร์สร้าง id ใหม่ทุกครั้งที่ยังไม่มี id)
-const MUTATING=['save','delete','setUser','changePin','uploadFile','postDealIncome','requestContact','completeProfile','register','login','logout','submitLead'];
+const MUTATING=['save','delete','setUser','changePin','uploadFile','postDealIncome','requestContact','confirmViewing','completeProfile','register','login','logout','submitLead'];
 let INFLIGHT=false;
 function call(action,payload){
   const lock=MUTATING.includes(action);
@@ -816,11 +816,16 @@ function editViewing(id,propId,buyerId){
     : buyer&&!id ? [{k:'property',l:'ทรัพย์',t:'select',o:opts(D.Properties),full:1},{k:'date',l:'วันที่สะดวก',t:'date'},{k:'time',l:'เวลา',t:'time'},{k:'feedback',l:'ข้อความถึงนายหน้า',t:'textarea',full:1}]
     : [{k:'result',l:'ความรู้สึกหลังชม',t:'select',o:selMap(VRESULT)},{k:'feedback',l:'ความเห็น',t:'textarea',full:1}];
   const bu=byId(D.Users,v.buyerUser);
+  const decide=id&&isAgent()&&v.result==='pending'&&(isStaff()||v.brokerUser===ME.id)?`<div class="linked"><h4>${v.confirmed?'ยืนยันนัดแล้ว '+esc(v.confirmed):'นัดนี้ยังไม่ยืนยันกับลูกค้า'}</h4><div style="display:flex;gap:6px;flex-wrap:wrap">${v.confirmed?'':`<button type="button" class="btn sm primary" onclick="act(this,()=>decideViewing('${id}','ok'),'กำลังยืนยัน…')">ยืนยันนัด + แจ้งลูกค้า</button>`}<button type="button" class="btn sm" onclick="act(this,()=>decideViewing('${id}','move'),'กำลังส่ง…')">ขอให้ลูกค้าเลือกวันใหม่</button></div></div>`:'';
   const info=id&&!isAgent()?`<div class="linked"><b>${esc(pName(v.property))}</b> · ${fmtD(v.date)} ${v.time||''} · นายหน้า ${esc(uName(v.brokerUser))}</div>`
     : (id&&isBroker()&&bu&&bu.masked?`<div class="linked" style="font-size:13.5px">ผู้ชมรายนี้ติดต่อผ่านทีมงาน <button type="button" class="btn sm" onclick="act(this,()=>askContact('${bu.id}','${v.property}'),'กำลังส่งคำขอ…')">ขอให้ทีมงานติดต่อ</button></div>`:'');
-  openForm(id?'นัดชมทรัพย์':'นัดชมทรัพย์ใหม่',fields,v,info,d=>{ if(!id&&!d.property) return toast('เลือกทรัพย์'); return saveRow('Viewings',Object.assign({},v,d)); },id&&isAgent()?()=>delRow('Viewings',id):null,null,ME.role==='owner');
+  openForm(id?'นัดชมทรัพย์':'นัดชมทรัพย์ใหม่',fields,v,info+decide,d=>{ if(!id&&!d.property) return toast('เลือกทรัพย์'); return saveRow('Viewings',Object.assign({},v,d)); },id&&isAgent()?()=>delRow('Viewings',id):null,null,ME.role==='owner');
 }
 
+async function decideViewing(id,how){
+  if(how==='move'&&!confirm('ยกเลิกนัดนี้ แล้วส่งปุ่มเลือกวันใหม่ให้ลูกค้าในไลน์?')) return;
+  const msg=await call('confirmViewing',{id,how}); closeModal(); await reload(); toast(msg);
+}
 /* ---------- deals & commission split ---------- */
 function vDeal(){
   head('ดีลและค่าคอมมิชชั่น',`ค่าคอมรอรับ ${fmtN(D.Deals.filter(d=>d.status!=='cancelled'&&!d.posted).reduce((s,d)=>s+Number(d.commissionAmt),0))} ฿`,`<button class="btn primary" onclick="editDeal()">+ เปิดดีล</button>`);
