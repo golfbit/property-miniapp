@@ -104,7 +104,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 14px;text-align:lef
 </div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
-<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.10.14b"}</script>
+<script type="application/json" id="bootjson">{"mini":true,"api":"https://script.google.com/macros/s/AKfycbwuG83OoS-BPpFMo87ihZViM8Ol-pY6q89dxhk_t638XuPzdUb_rYWLBzLIamR983nj/exec","liffId":"2011932041-2nXOUgGV","version":"2026.11.08a"}</script>
 <script>
 // แสดง error บนหน้าจอ (แทนที่กล่องล็อกอินว่างเปล่า) เพื่อให้แก้ได้ง่าย
 window.onerror=function(msg,src,line,col,err){ try{ var b=document.getElementById('authbox'); if(b&&!b.innerHTML.trim()) b.innerHTML='<h1 style="color:#B4372B;font-size:16px">แอปโหลดไม่สำเร็จ</h1><p style="font-size:13px;word-break:break-word">'+String(msg)+' (บรรทัด '+line+')</p><p style="font-size:12px;color:#66736F">ถ่ายภาพหน้านี้ส่งให้ผู้พัฒนา หรือกด F12 → Console</p>'; }catch(e){} };
@@ -123,7 +123,7 @@ const PDEAL={sale:'ฝากขาย',consign:'ขายฝาก',rent:'ให
 const LKIND={exclusive:'แต่งตั้งนายหน้าแต่เพียงผู้เดียว (Exclusive)',open:'เปิดทั่วไป (Open)',verbal:'ตกลงด้วยวาจา'};
 const LSTATUS={active:['ใช้งาน','green'],expired:['หมดอายุ','red'],closed:['ปิดดีลแล้ว','ink'],cancelled:['ยกเลิก','']};
 const CSTATUS={active:['อยู่ในสัญญา','green'],extended:['ต่อสัญญาแล้ว','gold'],redeemed:['ไถ่ถอนแล้ว','ink'],forfeited:['หลุดขายฝาก','red']};
-const VRESULT={pending:['รอชม','amber'],interested:['สนใจ','green'],thinking:['ขอคิดดู','gold'],not:['ไม่สนใจ',''],offer:['ยื่นข้อเสนอ','green']};
+const VRESULT={pending:['รอชม','amber'],interested:['สนใจ','green'],thinking:['ขอคิดดู','gold'],not:['ไม่สนใจ',''],offer:['ยื่นข้อเสนอ','green'],cancelled:['ยกเลิก','']};
 const DSTATUS={negotiating:['เจรจา','amber'],reserved:['วางมัดจำ','gold'],closed:['โอนแล้ว','green'],cancelled:['ยกเลิก','red']};
 const TTYPE={viewing:'พาชมทรัพย์',transfer:'นัดโอน/ทำสัญญา',doc:'เตรียมเอกสาร',call:'โทรติดตาม',survey:'ลงพื้นที่/รังวัด',other:'อื่นๆ'};
 const TRCAT={commission:'ค่าคอมมิชชั่น',interest:'ผลตอบแทนขายฝาก',redemption:'รับเงินไถ่ถอน',invest:'เงินลงทุนขายฝาก',fee:'ค่าธรรมเนียม/ภาษี',marketing:'การตลาด/โฆษณา',travel:'เดินทาง',other:'อื่นๆ'};
